@@ -77,6 +77,8 @@ export const extractedSchema = z.object({
   asksForReferences: z.boolean(),
   /** The posting's language, e.g. "English", for "Write documents in: the posting's language". */
   language: z.string().nullable(),
+  /** The country the job is in, as ISO 3166-1 alpha-2 in lower case ("ae"), for the resume's format; absent on older postings. */
+  country: z.string().nullable().optional(),
 });
 export type Extracted = z.infer<typeof extractedSchema>;
 

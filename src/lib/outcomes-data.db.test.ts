@@ -54,7 +54,7 @@ describe("loadOutcomeRows (outcome learning)", () => {
     expect(rows.map((row) => row.id).toSorted()).toEqual(["agent", "found", "pasted"]);
     const byId = new Map(rows.map((row) => [row.id, row]));
     expect(byId.get("found")).toMatchObject({ source: "find-jobs", fit: 81, covered: 50, keywords: 50, progressed: true, interviewed: true, rejected: false });
-    expect(byId.get("pasted")).toMatchObject({ source: "pasted", fit: null, covered: null, keywords: null, tone: "FORMAL", format: "GULF", rejected: true, progressed: false });
+    expect(byId.get("pasted")).toMatchObject({ source: "pasted", fit: null, covered: null, keywords: null, tone: "FORMAL", format: "Gulf CV", rejected: true, progressed: false });
     expect(byId.get("agent")).toMatchObject({ source: "agent", fit: 91, replied: true, progressed: false });
 
     const all = await loadOutcomeRows({ now, all: true });

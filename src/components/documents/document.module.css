@@ -511,3 +511,41 @@
     padding: 0;
   }
 }
+
+/* Personal details, as a resume format asks for them (resume formats). */
+.personal {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(var(--u) * 2) calc(var(--u) * 18);
+}
+
+.personalItem {
+  display: flex;
+  gap: calc(var(--u) * 6);
+}
+
+.personalItem dt {
+  color: var(--doc-muted);
+}
+
+.personalItem dt::after {
+  content: ":";
+}
+
+/* Place, date and name under a declaration or at the end of a Lebenslauf. */
+.signed {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: calc(var(--u) * 18);
+  margin-top: calc(var(--u) * 10);
+  break-inside: avoid;
+}
+
+/* Personal details at the end, a declaration or a signature, across the full width under the columns. */
+.closing {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--u) * var(--gap));
+  margin-top: calc(var(--u) * var(--gap));
+}

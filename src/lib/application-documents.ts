@@ -10,6 +10,7 @@ import type { z } from "zod";
 import { DocumentKind } from "@/generated/prisma/enums";
 import { extractedSchema, trimmedSchema, unitsSchema, type Trimmed, type Unit } from "@/lib/application-data";
 import { prisma } from "@/lib/prisma";
+import { resolveFormat } from "@/lib/resume-formats";
 import { loadProfile } from "@/lib/profile-data";
 import { loadSettings } from "@/lib/settings-data";
 import { loadTheme, THEME_FIELDS } from "@/lib/theme-data";
@@ -79,5 +80,7 @@ export async function loadDocuments(id: string) {
     includeReferences: settings.includeRefs && extracted?.asksForReferences === true,
     /** Dated the day it was sent; until then, today. */
     letterDate: calendarDay(application.sentAt ?? undefined),
+    /** The resume's format by country: the one picked, or the job country's (resume formats). */
+    format: resolveFormat(application.resumeFormat, extracted?.country),
   };
 }

@@ -5,6 +5,7 @@ import { expectedFrom, printedHeadings, readBack, type ParseResult } from "@/lib
 import { documentLabels } from "@/lib/document-labels";
 import { renderPdf } from "@/lib/pdf/render";
 import { resumeContent } from "@/lib/resume-content";
+import { resumePhoto } from "@/lib/resume-formats";
 import { resolveTheme, withoutSidebar } from "@/lib/themes";
 
 /** The text a parser gets from a PDF, all pages in order. */
@@ -21,10 +22,10 @@ export async function pdfText(pdf: Uint8Array): Promise<string> {
  * compares it with what the resume shows. Null without a tailored resume.
  */
 export async function checkResumePdf(id: string): Promise<ParseResult | null> {
-  const { application, profile, resume, includeReferences } = await loadDocuments(id);
+  const { application, profile, resume, includeReferences, format } = await loadDocuments(id);
   if (!resume) return null;
   const labels = documentLabels(application.language);
-  const content = resumeContent(profile, { units: resume.units, includeReferences, showPhoto: application.showPhoto }, labels);
+  const content = resumeContent(profile, { units: resume.units, includeReferences, showPhoto: resumePhoto(application.showPhoto, format), format }, labels);
   const layout = resolveTheme(resume.theme, application.followThemeLayout ? undefined : withoutSidebar(resume.theme.layout));
   const text = await pdfText(await renderPdf(`/print/resume/${id}`));
   return readBack(text, expectedFrom(content, printedHeadings(content, labels, layout), profile.basics), { sidebar: layout.split });

@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 import { documentLabels } from "@/lib/document-labels";
 import { documentLanguage } from "@/lib/document-language";
 import type { ProfileData } from "@/lib/profile";
-import { resumeContent, type ResumeContent, type ResumeOptions } from "@/lib/resume-content";
+import { personalWords, resumeContent, type ResumeContent, type ResumeOptions } from "@/lib/resume-content";
 import { PHOTO_SHAPES, resolveTheme, type ThemeData } from "@/lib/themes";
 
 import { Contact, ContactLine, DocumentPage, DocumentSection, plainUnit, type UnitRenderer } from "./document-page";
@@ -76,9 +76,25 @@ export function ResumeDocument({ theme, profile, paper, layout, language, render
     ),
   ].filter(Boolean);
 
+  const words = personalWords(labels);
+  // Personal details, as the resume's format asks for them (resume formats).
+  const personal = content.personal.length > 0 && (
+    <DocumentSection key="personal" title={words.heading}>
+      <dl className={styles.personal}>
+        {content.personal.map((item) => (
+          <div key={item.label} className={styles.personalItem}>
+            <dt>{item.label}</dt>
+            <dd>{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </DocumentSection>
+  );
+
   const main = [
+    content.personalAt === "top" && personal,
     content.summary && (
-      <DocumentSection key="summary" title={labels.profile}>
+      <DocumentSection key="summary" title={content.summaryHeading ?? labels.profile}>
         {renderUnit({ id: "summary", children: <p className={styles.summary}>{content.summary}</p> })}
       </DocumentSection>
     ),
@@ -209,6 +225,31 @@ export function ResumeDocument({ theme, profile, paper, layout, language, render
     ),
   ].filter(Boolean);
 
+  // What closes the resume, after every column: personal details when the
+  // format puts them last, then a declaration or a signature (resume formats).
+  const closing = [
+    content.personalAt === "bottom" && personal,
+    content.declaration && (
+      <DocumentSection key="declaration" title={words.declaration}>
+        <p>{content.declaration.text}</p>
+        <div className={styles.signed}>
+          <p>
+            {content.declaration.place && `${words.place}: ${content.declaration.place}`}
+            {content.declaration.place && <br />}
+            {`${words.date}: ${content.declaration.date}`}
+          </p>
+          <p className={styles.entryTitle}>{content.declaration.name}</p>
+        </div>
+      </DocumentSection>
+    ),
+    content.signature && (
+      <div key="signature" className={styles.signed}>
+        <p>{content.signature.line}</p>
+        <p className={styles.entryTitle}>{content.signature.name}</p>
+      </div>
+    ),
+  ].filter(Boolean);
+
   // Reading order matches what you see: the sidebar comes first in sidebar
   // layouts (and keeps its column even when empty) unless it's at the end of
   // the line, and its sections follow the main ones in a single column.
@@ -245,6 +286,7 @@ export function ResumeDocument({ theme, profile, paper, layout, language, render
           </div>
         ))}
       </div>
+      {closing.length > 0 && <div className={styles.closing}>{closing}</div>}
     </DocumentPage>
   );
 }

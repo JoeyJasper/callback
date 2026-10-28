@@ -20,6 +20,7 @@ import {
   type Tone,
 } from "@/generated/prisma/enums";
 import { type InterviewPrep, type Match, type Requirement, type Unit } from "@/lib/application-data";
+import { missingPersonal, resolveFormat, resumePhoto } from "@/lib/resume-formats";
 import { EMAIL_UNITS, WRITTEN_EMAIL_UNITS } from "@/lib/application-email";
 import { documentLabels } from "@/lib/document-labels";
 import { defaultFrame, isFrameUnit, isParagraph, withFrame, WRITTEN_FRAME_UNITS } from "@/lib/letter-frame";
@@ -45,6 +46,7 @@ import {
   sendMessage,
   setApplicationTheme,
   setFollowThemeLayout,
+  setResumeFormat,
   setShowPhoto,
   startRegenerating,
   startWritingEmail,
@@ -53,6 +55,7 @@ import {
 } from "./actions";
 import { ApplicationHeader } from "./application-header";
 import { ApplicationMenu } from "./application-menu";
+import { FormatMenu } from "./format-menu";
 import { AtsTab, resumeCoverage } from "./ats-tab";
 import { ConversationTab } from "./conversation-tab";
 import { EmailTab, type Attachments } from "./email-tab";
@@ -65,6 +68,7 @@ import { PrepTab } from "./prep-tab";
 import { RefinePanel, type ChatEntry } from "./refine-panel";
 import { StatusControl } from "./status-control";
 import { ThemeMenu } from "./theme-menu";
+import { FormatNotice } from "./format-notice";
 import { byPageLimit, TrimmedNotice } from "./trimmed-notice";
 
 import { aboutWords, type Tab } from "./tabs";
@@ -161,6 +165,8 @@ export type ApplicationViewProps = {
   /** A reply still being written, e.g. since before a reload. */
   refining: string | null;
   suggestions: RefineSuggestions;
+  /** The resume's format by country as picked (null follows the job's country), and the job's country. */
+  resumeFormat: { chosen: string | null; country: string | null };
   /** The interview prep pack, once written, and the job writing it, if one is. */
   prep: InterviewPrep | null;
   preparing: string | null;
@@ -202,6 +208,7 @@ export function ApplicationView({
   suggestions,
   prep,
   preparing,
+  resumeFormat,
 }: ApplicationViewProps) {
   const router = useRouter();
   const [tab, setTab] = useState(initialTab);
@@ -209,7 +216,10 @@ export function ApplicationView({
   const [facts, setFacts] = useState(factsAtLoad);
   const [followLayout, showFollowLayout] = useOptimistic(application.followThemeLayout);
   const [photoChoice, showPhotoChoice] = useOptimistic(application.showPhoto);
-  const showPhoto = photoChoice ?? profile.photo?.onResumes ?? false;
+  const [formatChoice, showFormatChoice] = useOptimistic(resumeFormat.chosen);
+  const format = resolveFormat(formatChoice, resumeFormat.country);
+  // The switch shows what the resume shows: the application's choice, else the format's, else the profile's.
+  const showPhoto = resumePhoto(photoChoice, format) ?? profile.photo?.onResumes ?? false;
   // A theme just picked from the Theme menu, until the page has it (#226).
   const [themeChoice, showThemeChoice] = useOptimistic<ThemeData | null>(null);
   const resumeTheme = themeChoice ?? resume?.theme;
@@ -266,6 +276,12 @@ export function ApplicationView({
   const themeMenu = (current: ThemeData) => (
     <ThemeMenu themes={themes} baseThemeId={baseThemeId} current={current} onChange={changeTheme} />
   );
+
+  const changeFormat = (chosen: string | null) =>
+    startTransition(async () => {
+      showFormatChoice(chosen);
+      toastResult(await setResumeFormat({ id: application.id, format: chosen as Parameters<typeof setResumeFormat>[0]["format"] }));
+    });
 
   const changePhoto = (show: boolean) =>
     startTransition(async () => {
@@ -685,11 +701,15 @@ export function ApplicationView({
                   versionBanner(viewed(DocumentKind.RESUME)!)
                 ) : resume.trimmed?.length ? (
                   <TrimmedNotice items={resume.trimmed} onPutBack={putBack} />
+                ) : format && missingPersonal(format, profile.basics).length > 0 ? (
+                  <FormatNotice format={format} missing={missingPersonal(format, profile.basics)} />
                 ) : undefined
               }
               label={
                 <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span className="flex items-center gap-1">Tailored resume · {themeMenu(resumeTheme)}</span>
+                  <span className="flex items-center gap-1">
+                    Tailored resume · {themeMenu(resumeTheme)} · <FormatMenu chosen={formatChoice} country={resumeFormat.country} onChange={changeFormat} />
+                  </span>
                   {hasSidebar(resumeTheme.layout) && (
                     <PreviewSwitch label="Sidebar layout" checked={followLayout} onCheckedChange={changeLayout} />
                   )}
@@ -704,6 +724,7 @@ export function ApplicationView({
                 paper={paper}
                 followThemeLayout={followLayout}
                 showPhoto={photoChoice}
+                format={format}
                 language={application.language}
                 includeReferences={includeReferences}
                 renderUnit={viewed(DocumentKind.RESUME) ? plainUnit : unitsOf(DocumentKind.RESUME, resumeUnits)}

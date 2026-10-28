@@ -76,6 +76,14 @@ export const BASICS_FIELDS = [
 ] as const;
 export type BasicsField = (typeof BASICS_FIELDS)[number];
 
+/**
+ * Personal details some countries' resumes show and others leave out
+ * (src/lib/resume-formats.ts): kept with the Basics, never sent to the AI,
+ * and left alone by a resume import.
+ */
+export const PERSONAL_FIELDS = ["nationality", "visaStatus", "noticePeriod", "drivingLicence", "maritalStatus", "placeOfBirth"] as const;
+export type PersonalField = (typeof PERSONAL_FIELDS)[number];
+
 /** The Basics fields a profile needs (#216); the rest are optional, and the section count is "filled/6". */
 export const REQUIRED_BASICS = ["name", "headline", "email", "city", "country", "summary"] as const satisfies readonly BasicsField[];
 
@@ -85,26 +93,30 @@ export const isOptionalBasic = (field: BasicsField) => !(REQUIRED_BASICS as read
 // The profile as the editor works with it: plain values (dates of birth as
 // "YYYY-MM-DD"), loaded by loadProfile() in src/lib/profile-data.ts.
 
-export type Basics = Record<BasicsField, string> & { showAge: boolean };
+export type Basics = Record<BasicsField, string> & Partial<Record<PersonalField, string>> & { showAge: boolean };
 
 // The basics are stored in the ProfileField table, one text row per filled-in
 // field: text as typed, the date of birth as "YYYY-MM-DD", showAge as "true".
 
 /** The keys in the ProfileField table. */
-export const PROFILE_KEYS = [...BASICS_FIELDS, "showAge"] as const;
+export const PROFILE_KEYS = [...BASICS_FIELDS, ...PERSONAL_FIELDS, "showAge"] as const;
 export type ProfileKey = (typeof PROFILE_KEYS)[number];
 
 /** The basics from ProfileField rows; a missing key is empty, and keys it doesn't know are ignored. */
 export function basicsFromFields(rows: readonly { key: string; value: string }[]): Basics {
   const values = new Map(rows.map((row) => [row.key, row.value]));
-  const basics = Object.fromEntries(BASICS_FIELDS.map((field) => [field, values.get(field) ?? ""]));
-  return { ...(basics as Record<BasicsField, string>), showAge: values.get("showAge") === "true" };
+  const basics = Object.fromEntries([...BASICS_FIELDS, ...PERSONAL_FIELDS].map((field) => [field, values.get(field) ?? ""]));
+  return { ...(basics as Record<BasicsField | PersonalField, string>), showAge: values.get("showAge") === "true" };
 }
 
-/** The value to store for each key, or null for an empty one, whose row is removed. */
-export function fieldsFromBasics(basics: Basics): Record<ProfileKey, string | null> {
+/**
+ * The value to store for each key, or null for an empty one, whose row is
+ * removed. Personal details left out (undefined) stay as they are.
+ */
+export function fieldsFromBasics(basics: Basics): Partial<Record<ProfileKey, string | null>> {
   const fields = Object.fromEntries(BASICS_FIELDS.map((field) => [field, basics[field] || null]));
-  return { ...(fields as Record<BasicsField, string | null>), showAge: basics.showAge ? "true" : null };
+  const personal = Object.fromEntries(PERSONAL_FIELDS.flatMap((field) => (basics[field] === undefined ? [] : [[field, basics[field] || null]])));
+  return { ...fields, ...personal, showAge: basics.showAge ? "true" : null };
 }
 
 export type SkillItem = { id: string; name: string };

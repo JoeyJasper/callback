@@ -90,6 +90,11 @@ describe("resumeContent", () => {
       skills: "",
       languages: "",
       references: [],
+      personal: [],
+      personalAt: "bottom",
+      summaryHeading: null,
+      declaration: null,
+      signature: null,
     });
   });
 

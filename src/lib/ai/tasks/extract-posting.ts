@@ -29,6 +29,7 @@ const answerSchema = z.object({
   ),
   asksForReferences: z.boolean(),
   language: z.string().nullable(),
+  country: z.string().nullable().default(null),
 });
 
 const INSTRUCTIONS = `You read job postings and pull out their details as JSON.
@@ -47,7 +48,8 @@ const INSTRUCTIONS = `You read job postings and pull out their details as JSON.
   mustHave is true when the posting requires it, false when it's a plus ("nice to have", "ideally", "bonus", "preferred", "is a plus").
   keywords: the exact words or short phrases from the posting that an applicant tracking system would search a resume for to check this requirement, as written in the posting (e.g. ["Figma", "prototyping"]); up to four, [] when none.
 - asksForReferences: true only if the posting explicitly asks applicants to provide references; otherwise false.
-- language: the language the posting is written in, as its English name.`;
+- language: the language the posting is written in, as its English name.
+- country: the country the job is in, as its ISO 3166-1 alpha-2 code in lower case ("ae" for Dubai, "de" for Berlin); for a remote job, the country it hires in; null when the posting doesn't make it clear.`;
 
 /** NEW-3: title, company, role, location, work mode, salary, deadline, typed requirements and language. */
 export const extractPosting: Task<{ posting: string; today?: Date }, Extracted> = async (provider, { posting, today = new Date() }, { signal }) => {
@@ -81,6 +83,7 @@ export const extractPosting: Task<{ posting: string; today?: Date }, Extracted> 
       company,
       title: answer.title?.trim() || (role && company ? `${role} · ${company}` : null),
       deadline: isoDate(answer.deadline),
+      country: /^[a-z]{2}$/i.test(answer.country?.trim() ?? "") ? answer.country!.trim().toLowerCase() : null,
       requirements: answer.requirements
         .filter((requirement) => requirement.text.trim())
         .map(({ mustHave, keywords, ...requirement }) => {

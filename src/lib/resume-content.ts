@@ -2,6 +2,7 @@ import type { Unit } from "@/lib/application-data";
 import { ageLabel, ENGLISH_LABELS, languagesLine, type DocumentLabels } from "@/lib/document-labels";
 import { publicationHref, publicationLink } from "@/lib/citation";
 import { ageOn, formatDateRange, resumePublications, type Basics, type ProfileData } from "@/lib/profile";
+import { PERSONAL_LABELS, type PersonalField, type ResumeFormat } from "@/lib/resume-formats";
 
 // What a resume shows, worked out from the profile (the base resume) or from
 // a tailored document's units, so the renderer only has to lay it out.
@@ -49,6 +50,16 @@ export type ResumeContent = {
   /** "Dutch: Native · English: Fluent (C2)" */
   languages: string;
   references: { id: string; name: string; role: string; contact: string }[];
+  /** Personal details the resume's format shows (resume formats), in its order; empty without a format. */
+  personal: { label: string; value: string }[];
+  /** Where they go: under the header, or before the end. */
+  personalAt: "top" | "bottom";
+  /** The summary's heading when the format names it, e.g. "Professional summary". */
+  summaryHeading: string | null;
+  /** India's closing declaration, with place, date and name. */
+  declaration: { text: string; place: string; date: string; name: string } | null;
+  /** Place, date and name at the end (German-speaking countries). */
+  signature: { line: string; name: string } | null;
 };
 
 export type ResumeOptions = {
@@ -60,7 +71,28 @@ export type ResumeOptions = {
   showPhoto?: boolean | null;
   /** For "Age N"; defaults to now. */
   today?: Date;
+  /** The resume's format by country (resume formats); null or left out is the theme as it is. */
+  format?: ResumeFormat | null;
 };
+
+/** Personal details' labels in the languages their formats are written in; English otherwise. */
+const PERSONAL_WORDS: Record<string, Partial<Record<PersonalField | "dob" | "heading" | "declaration" | "place" | "date", string>>> = {
+  de: { heading: "Persönliche Daten", dob: "Geburtsdatum", placeOfBirth: "Geburtsort", nationality: "Staatsangehörigkeit", maritalStatus: "Familienstand", drivingLicence: "Führerschein", noticePeriod: "Kündigungsfrist", visaStatus: "Aufenthaltsstatus" },
+};
+
+/** "Personal details" and the other words around them, in the document's language where known. */
+export function personalWords(labels: Pick<DocumentLabels, "locale">) {
+  const words = PERSONAL_WORDS[labels.locale.slice(0, 2)] ?? {};
+  return {
+    heading: words.heading ?? "Personal details",
+    declaration: words.declaration ?? "Declaration",
+    place: words.place ?? "Place",
+    date: words.date ?? "Date",
+    label: (field: PersonalField | "dob") => words[field] ?? PERSONAL_LABELS[field],
+  };
+}
+
+const longDate = (date: Date, locale: string) => new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(date);
 
 /** The separator between contact details on one line. */
 export const CONTACT_SEPARATOR = "  ·  ";
@@ -97,10 +129,16 @@ const lines = (text: string) =>
 /** What the resume shows, with its dates and levels in the words of `labels`. */
 export function resumeContent(
   profile: ProfileData,
-  { units, includeReferences = false, showPhoto, today = new Date() }: ResumeOptions = {},
+  { units, includeReferences = false, showPhoto, today = new Date(), format = null }: ResumeOptions = {},
   labels: DocumentLabels = ENGLISH_LABELS,
 ): ResumeContent {
-  const { basics } = profile;
+  // A format that leaves out age leaves it out whatever the profile says.
+  const basics = format && !format.allowAge ? { ...profile.basics, showAge: false } : profile.basics;
+  const words = personalWords(labels);
+  const place = basics.city.trim();
+  // Day before month everywhere but North America: "18 April 1992".
+  const dateLocale = labels.locale.startsWith("en") && format && format.id !== "US" && format.id !== "CA" ? "en-GB" : labels.locale;
+  const dateOfBirth = /^\d{4}-\d{2}-\d{2}$/.test(basics.dob) ? longDate(new Date(`${basics.dob}T00:00:00Z`), dateLocale) : "";
   const skillNames = new Map(profile.skills.map((skill) => [skill.id, skill.name]));
   const dates = { locale: labels.locale, present: labels.present };
 
@@ -154,6 +192,17 @@ export function resumeContent(
           contact: [reference.email, reference.phone].map((part) => part.trim()).filter(Boolean).join(" · "),
         }))
       : [],
+    personal: (format?.personal ?? []).flatMap((field) => {
+      const value = field === "dob" ? dateOfBirth : (basics[field] ?? "").trim();
+      return value ? [{ label: words.label(field), value }] : [];
+    }),
+    personalAt: format?.personalAt ?? "bottom",
+    // Format headings are English; a resume written in another language keeps its own word.
+    summaryHeading: format?.summaryHeading && labels.locale.startsWith("en") ? format.summaryHeading : null,
+    declaration: format?.declaration
+      ? { text: format.declaration, place, date: longDate(today, dateLocale), name: basics.name.trim() }
+      : null,
+    signature: format?.signature ? { line: [place, longDate(today, dateLocale)].filter(Boolean).join(", "), name: basics.name.trim() } : null,
   };
 
   if (units) {

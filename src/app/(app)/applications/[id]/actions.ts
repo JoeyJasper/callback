@@ -20,6 +20,7 @@ import { regenerateUnitJob, unitJobKey } from "@/lib/jobs/regenerate-unit";
 import { findUnfinishedJobs, startJob } from "@/lib/jobs/runner";
 import { emailJobKey, writeEmailJob } from "@/lib/jobs/write-email";
 import { prisma } from "@/lib/prisma";
+import { NO_FORMAT, RESUME_FORMAT_IDS } from "@/lib/resume-formats";
 import { findOrCreateSkill } from "@/lib/profile-entries";
 import { cleanUnitText, isPublicationUnit, unitName } from "@/lib/unit-text";
 
@@ -33,6 +34,20 @@ export const setFollowThemeLayout = action(
   z.object({ id: z.string().min(1), follow: z.boolean() }),
   async ({ id, follow }) => {
     const { count } = await prisma.application.updateMany({ where: { id }, data: { followThemeLayout: follow } });
+    if (count === 0) throw new ActionError(GONE);
+    refresh(id);
+    return null;
+  },
+);
+
+/**
+ * The Resume tab's format menu (resume formats): a format by country, "NONE"
+ * for the theme as it is, or null to follow the job's country.
+ */
+export const setResumeFormat = action(
+  z.object({ id: z.string().min(1), format: z.enum([...RESUME_FORMAT_IDS, NO_FORMAT]).nullable() }),
+  async ({ id, format }) => {
+    const { count } = await prisma.application.updateMany({ where: { id }, data: { resumeFormat: format } });
     if (count === 0) throw new ActionError(GONE);
     refresh(id);
     return null;

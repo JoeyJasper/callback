@@ -1,6 +1,7 @@
 import type { DateFormat, PaperSize, Tone } from "@/generated/prisma/enums";
 import type { DocumentData } from "@/lib/application-documents";
 import type { ProfileData } from "@/lib/profile";
+import { resumePhoto, type ResumeFormat } from "@/lib/resume-formats";
 import { withoutSidebar } from "@/lib/themes";
 
 import { CoverLetterDocument } from "./cover-letter-document";
@@ -19,6 +20,7 @@ export function TailoredResume({
   language,
   includeReferences,
   renderUnit,
+  format = null,
 }: {
   resume: DocumentData;
   profile: ProfileData;
@@ -30,15 +32,18 @@ export function TailoredResume({
   language: string;
   includeReferences: boolean;
   renderUnit?: UnitRenderer;
+  /** The resume's format by country (resume formats): its paper, photo and personal details. */
+  format?: ResumeFormat | null;
 }) {
   return (
     <ResumeDocument
       theme={resume.theme}
       profile={profile}
-      paper={paper}
+      paper={format?.paper ?? paper}
       units={resume.units}
       layout={followThemeLayout ? undefined : withoutSidebar(resume.theme.layout)}
-      showPhoto={showPhoto}
+      showPhoto={resumePhoto(showPhoto, format)}
+      format={format}
       language={language}
       includeReferences={includeReferences}
       renderUnit={renderUnit}

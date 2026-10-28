@@ -141,6 +141,7 @@ export default async function ApplicationPage({ params, searchParams }: PageProp
       messages={messages}
       refining={refineJobs.at(-1)?.id ?? null}
       prep={readJson(interviewPrepSchema, application.interviewPrep)}
+      resumeFormat={{ chosen: application.resumeFormat, country: extracted?.country ?? null }}
       preparing={prepJobs.at(-1)?.id ?? null}
       suggestions={refineSuggestions({
         match,

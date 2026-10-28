@@ -118,6 +118,12 @@ describe("extractPosting", () => {
     expect(data.requirements[2].keywords).toEqual(["a", "b", "c", "d"]);
   });
 
+  it("keeps the job's country as a lower-case ISO code, for the resume's format", async () => {
+    expect((await extractPosting(model({ ...extracted, country: " AE " }), { posting, today }, options)).data.country).toBe("ae");
+    expect((await extractPosting(model({ ...extracted, country: "Dubai" }), { posting, today }, options)).data.country).toBeNull();
+    expect((await extractPosting(model(extracted), { posting, today }, options)).data.country).toBeNull();
+  });
+
   it("only keeps whole dates", () => {
     expect(isoDate("2026-10-15")).toBe("2026-10-15");
     expect(isoDate("15 Oct 2026")).toBe("2026-10-15");
@@ -268,6 +274,15 @@ describe("tailorResume", () => {
     skills: ["Design systems", "figma", "Kubernetes", "User research"],
     education: [{ id: "d1", notes: "Thesis on trust in automation" }],
   };
+
+  it("writes in the format of the job's country, or the one asked for", async () => {
+    const gulf = model(answer);
+    await tailorResume(gulf, { profile, extracted: { ...extracted, country: "ae" }, match: null, facts: [], posting }, options);
+    expect(sent(gulf).system).toMatch(/This is a Gulf CV/);
+    const picked = model(answer);
+    await tailorResume(picked, { profile, extracted: { ...extracted, country: "ae" }, match: null, facts: [], posting, format: null }, options);
+    expect(sent(picked).system).not.toMatch(/This is a Gulf CV/);
+  });
 
   it("tells the writer which lines prove each requirement, the posting's terms and what's only a plus", async () => {
     const match: Match = {

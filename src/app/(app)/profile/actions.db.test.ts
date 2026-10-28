@@ -75,10 +75,20 @@ describe("profile actions", () => {
       { key: "name", value: "Jane Doe" },
       { key: "showAge", value: "true" },
     ]);
-    expect((await loadProfile()).basics).toEqual(basics);
+    // Personal details come back empty until they're filled in (resume formats).
+    expect((await loadProfile()).basics).toEqual({ ...basics, nationality: "", visaStatus: "", noticePeriod: "", drivingLicence: "", maritalStatus: "", placeOfBirth: "" });
 
+    await saveBasics({ ...basics, dob: "", showAge: false, nationality: "Dutch" });
+    expect(await fields()).toEqual([
+      { key: "name", value: "Jane Doe" },
+      { key: "nationality", value: "Dutch" },
+    ]);
+    // Saving without them leaves them as they are.
     await saveBasics({ ...basics, dob: "", showAge: false });
-    expect(await fields()).toEqual([{ key: "name", value: "Jane Doe" }]);
+    expect(await fields()).toEqual([
+      { key: "name", value: "Jane Doe" },
+      { key: "nationality", value: "Dutch" },
+    ]);
   });
 
   it("adds skills in order and ignores duplicates in any case", async () => {

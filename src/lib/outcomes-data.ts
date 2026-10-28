@@ -6,6 +6,7 @@ import { resumeCoverage } from "@/lib/ats";
 import { settled, type OutcomeRow, type OutcomeSource } from "@/lib/outcomes";
 import { prisma } from "@/lib/prisma";
 import { loadProfile } from "@/lib/profile-data";
+import { resolveFormat } from "@/lib/resume-formats";
 
 const PROGRESSED: FunnelStage[] = [FunnelStage.SCREENING, FunnelStage.INTERVIEW, FunnelStage.OFFER, FunnelStage.ACCEPTED];
 const INTERVIEWED: FunnelStage[] = [FunnelStage.INTERVIEW, FunnelStage.OFFER, FunnelStage.ACCEPTED];
@@ -77,7 +78,8 @@ export async function loadOutcomeRows({ now = new Date(), all = false }: { now?:
       fit: application.agentScore ?? (application.posting ? (scoreOf.get(`${application.posting.source}:${application.posting.externalId}`) ?? null) : null),
       covered: hits ? Math.round((hits.hit / hits.total) * 100) : null,
       keywords,
-      format: application.resumeFormat,
+      // The format the resume went out in: the one picked, or the job country's.
+      format: resolveFormat(application.resumeFormat, extracted.success ? extracted.data.country : null)?.name ?? null,
       sentAt: application.sentAt!,
       progressed: stage !== null && PROGRESSED.includes(stage),
       interviewed: stage !== null && INTERVIEWED.includes(stage),

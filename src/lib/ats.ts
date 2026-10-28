@@ -2,7 +2,7 @@ import type { Match, Requirement, Unit } from "@/lib/application-data";
 import { citationText } from "@/lib/citation";
 import { documentLabels, type DocumentLabels } from "@/lib/document-labels";
 import type { ProfileData } from "@/lib/profile";
-import { resumeContent, type ResumeContent } from "@/lib/resume-content";
+import { personalWords, resumeContent, type ResumeContent } from "@/lib/resume-content";
 import { indexOfWords, mentions, words } from "@/lib/terms";
 
 // The ATS check: what an applicant tracking system would find in a tailored
@@ -312,11 +312,14 @@ export function readBack(pdfText: string, expected: Expected, { sidebar }: { sid
  */
 export function printedHeadings(
   content: ResumeContent,
-  labels: Pick<DocumentLabels, "profile" | "experience" | "projects" | "education" | "publications" | "references" | "contact" | "skills" | "languages">,
+  labels: Pick<DocumentLabels, "locale" | "profile" | "experience" | "projects" | "education" | "publications" | "references" | "contact" | "skills" | "languages">,
   layout: { split: boolean; sidebarEnd: boolean },
 ): string[] {
+  const words = personalWords(labels);
+  const personal = content.personal.length > 0 && words.heading;
   const main = [
-    content.summary && labels.profile,
+    content.personalAt === "top" && personal,
+    content.summary && (content.summaryHeading ?? labels.profile),
     content.experience.length > 0 && labels.experience,
     content.projects.length > 0 && labels.projects,
     content.education.length > 0 && labels.education,
@@ -324,7 +327,9 @@ export function printedHeadings(
     content.references.length > 0 && labels.references,
   ];
   const sidebar = [layout.split && content.contacts.length > 0 && labels.contact, content.skills && labels.skills, content.languages && labels.languages];
-  const ordered = !layout.split || layout.sidebarEnd ? [...main, ...sidebar] : [...sidebar, ...main];
+  // Under every column: personal details when they come last, then a declaration.
+  const closing = [content.personalAt === "bottom" && personal, content.declaration && words.declaration];
+  const ordered = [...(!layout.split || layout.sidebarEnd ? [...main, ...sidebar] : [...sidebar, ...main]), ...closing];
   return ordered.filter((heading): heading is string => Boolean(heading));
 }
 

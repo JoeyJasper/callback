@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAutosave } from "@/hooks/use-autosave";
 import type { ProfilePhoto } from "@/lib/photo";
-import { ageOn, isOptionalBasic, type Basics, type BasicsField } from "@/lib/profile";
+import { ageOn, isOptionalBasic, type Basics, type BasicsField, type PersonalField } from "@/lib/profile";
 
 import { saveBasics } from "./actions";
 import { PhotoField } from "./photo-field";
@@ -35,6 +35,16 @@ const FIELDS: FieldSpec[] = [
   { field: "city", label: "City", placeholder: "Springfield", autoComplete: "address-level2" },
   { field: "country", label: "Country", placeholder: "United States", autoComplete: "country-name" },
   { field: "linkedin", label: "LinkedIn", wide: true, placeholder: "linkedin.com/in/johndoe" },
+];
+
+// Personal details for the countries whose resumes show them (resume formats): each resume shows only what its format asks for.
+const PERSONAL: { field: PersonalField; label: string; placeholder: string; wide?: boolean }[] = [
+  { field: "nationality", label: "Nationality", placeholder: "Indian" },
+  { field: "visaStatus", label: "Visa status", placeholder: "UAE employment visa, transferable" },
+  { field: "noticePeriod", label: "Notice period", placeholder: "30 days" },
+  { field: "drivingLicence", label: "Driving licence", placeholder: "UAE, valid" },
+  { field: "maritalStatus", label: "Marital status", placeholder: "Married" },
+  { field: "placeOfBirth", label: "Place of birth", placeholder: "Chennai" },
 ];
 
 // Gentle format hints: they never block saving.
@@ -75,10 +85,10 @@ export function BasicsSection({
   const track = useTrackSave();
   const { flush } = useAutosave(basics, (value) => track(saveBasics(value)));
   // Hints show once you've left a field, not while you're typing in it.
-  const [visited, setVisited] = useState<Set<BasicsField>>(new Set());
+  const [visited, setVisited] = useState<Set<BasicsField | PersonalField>>(new Set());
 
-  const set = (field: BasicsField, value: string) => onChange({ ...basics, [field]: value });
-  const leave = (field: BasicsField) => {
+  const set = (field: BasicsField | PersonalField, value: string) => onChange({ ...basics, [field]: value });
+  const leave = (field: BasicsField | PersonalField) => {
     setVisited((fields) => new Set(fields).add(field));
     flush();
   };
@@ -125,6 +135,23 @@ export function BasicsSection({
         checked={basics.showAge}
         onChange={(event) => onChange({ ...basics, showAge: event.target.checked })}
       />
+      <div className="col-span-2 flex flex-col gap-1 border-t border-line pt-5">
+        <h3 className="text-field font-medium">For CVs that ask for them</h3>
+        <p className="text-meta text-pretty text-muted">
+          Gulf, Indian and German-speaking CVs list some of these; American, British and Canadian resumes leave them out. Each tailored resume shows only what the job country&apos;s format calls for, and none of it goes to the AI.
+        </p>
+      </div>
+      {PERSONAL.map(({ field, label, placeholder, wide }) => (
+        <Input
+          key={field}
+          className={wide ? "col-span-2" : undefined}
+          label={<Optional label={label} />}
+          placeholder={placeholder}
+          value={basics[field] ?? ""}
+          onChange={(event) => set(field, event.target.value)}
+          onBlur={() => leave(field)}
+        />
+      ))}
     </Card>
   );
 }

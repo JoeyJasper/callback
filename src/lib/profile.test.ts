@@ -5,6 +5,7 @@ import { LanguageLevel } from "@/generated/prisma/enums";
 import {
   ageOn,
   BASICS_FIELDS,
+  PERSONAL_FIELDS,
   basicsFromFields,
   byStartDateDesc,
   inEntryOrder,
@@ -115,6 +116,13 @@ describe("basics", () => {
     expect(filledBasics({ ...empty, name: "Jane", email: "jane.doe@example.com", city: "  " })).toBe(2);
   });
 
+  it("keeps personal details with the basics, and leaves ones not sent alone (resume formats)", () => {
+    const basics = basicsFromFields([{ key: "name", value: "Jane" }, { key: "nationality", value: "Dutch" }]);
+    expect(basics).toMatchObject({ name: "Jane", nationality: "Dutch", visaStatus: "" });
+    expect(fieldsFromBasics({ ...basics, nationality: "", visaStatus: "Work permit" })).toMatchObject({ nationality: null, visaStatus: "Work permit" });
+    expect("nationality" in fieldsFromBasics({ ...basics, nationality: undefined })).toBe(false);
+  });
+
   it("computes the age from the date of birth", () => {
     const today = new Date(2026, 8, 28); // 28 September 2026, local time
     expect(ageOn("1992-04-18", today)).toBe(34);
@@ -174,8 +182,10 @@ describe("stored basics", () => {
 
   it("reads them back, with missing keys empty and unknown ones ignored", () => {
     const rows = Object.entries(fieldsFromBasics(basics)).flatMap(([key, value]) => (value === null ? [] : [{ key, value }]));
-    expect(basicsFromFields(rows)).toEqual(basics);
-    expect(basicsFromFields([{ key: "nickname", value: "Lee" }])).toEqual({ ...basics, name: "", dob: "", showAge: false });
+    // Personal details read back empty when there are none (resume formats).
+    const noPersonal = Object.fromEntries(PERSONAL_FIELDS.map((field) => [field, ""]));
+    expect(basicsFromFields(rows)).toEqual({ ...basics, ...noPersonal });
+    expect(basicsFromFields([{ key: "nickname", value: "Lee" }])).toEqual({ ...basics, ...noPersonal, name: "", dob: "", showAge: false });
   });
 });
 

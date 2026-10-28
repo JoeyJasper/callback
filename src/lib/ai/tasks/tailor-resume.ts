@@ -4,6 +4,7 @@ import { unitsSchema, type Extracted, type Match, type Unit } from "@/lib/applic
 import { publicationLabel } from "@/lib/citation";
 import { documentLabels, ENGLISH_LABELS, languagesLine, type DocumentLabels } from "@/lib/document-labels";
 import { resumePublications, sameName, type ProfileData } from "@/lib/profile";
+import { formatForCountry, type ResumeFormat } from "@/lib/resume-formats";
 
 import { guardSources, guardUnits } from "../fact-guard";
 
@@ -61,13 +62,17 @@ export type TailorInput = {
   facts: string[];
   /** The posting as pasted, for the fact guard. */
   posting: string;
+  /** The resume's format by country; left out, it's the job country's (resume formats). */
+  format?: ResumeFormat | null;
 };
 
 /** APP-4: the tailored resume as units (summary, each role, each project, skills, each degree, each publication, languages). */
-export const tailorResume: Task<TailorInput, Unit[]> = async (provider, { profile, extracted, match, facts, posting }, options) => {
+export const tailorResume: Task<TailorInput, Unit[]> = async (provider, { profile, extracted, match, facts, posting, format }, options) => {
+  const market = format === undefined ? formatForCountry(extracted.country) : format;
   const answer = await provider.complete({
     system: system(
       INSTRUCTIONS,
+      market?.writing,
       pageFit(options.maxPages),
       truthfulness(options.strict),
       candidateFacts(profile, facts),

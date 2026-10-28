@@ -25,6 +25,7 @@ import {
   sendMessage,
   setApplicationTheme,
   setFollowThemeLayout,
+  setResumeFormat,
   setShowPhoto,
   startRegenerating,
   startWritingEmail,
@@ -38,6 +39,7 @@ vi.mock("./actions", () => ({
   setApplicationTheme: vi.fn(async () => ({ ok: true, data: null })),
   setFollowThemeLayout: vi.fn(async () => ({ ok: true, data: null })),
   setShowPhoto: vi.fn(async () => ({ ok: true, data: null })),
+  setResumeFormat: vi.fn(async () => ({ ok: true, data: null })),
   saveUnit: vi.fn(async ({ text }: { text: string }) => ({ ok: true, data: { text } })),
   startRegenerating: vi.fn(async () => ({ ok: true, data: "job-1" })),
   restoreUnit: vi.fn(async () => ({ ok: true, data: null })),
@@ -126,6 +128,7 @@ const props: ApplicationViewProps = {
   refining: null,
   prep: null,
   preparing: null,
+  resumeFormat: { chosen: null, country: null },
   suggestions: { resume: ["Make the summary shorter"], letter: ["Make it more formal"], email: ["Shorter, under 100 words"] },
 };
 
@@ -191,6 +194,41 @@ describe("the document tabs (E8-2)", () => {
 
     await user.click(screen.getByRole("switch", { name: "Sidebar layout" }));
     expect(setFollowThemeLayout).toHaveBeenCalledWith({ id: "app-1", follow: true });
+  });
+
+  it("formats the resume for the job's country, shows the photo it expects, and switches to another (resume formats)", async () => {
+    const user = userEvent.setup();
+    const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+    const profile = { ...props.profile, photo: { src: png, onResumes: false }, basics: { ...props.profile.basics, nationality: "Dutch" } };
+    render(<ApplicationView {...props} profile={profile} resumeFormat={{ chosen: null, country: "ae" }} />);
+    const resume = screen.getByRole("article", { name: "Resume" });
+    // A Gulf CV shows the photo the profile keeps off other resumes, and personal details.
+    expect(within(resume).getByRole("img", { name: profile.basics.name })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Photo" })).toHaveAttribute("aria-checked", "true");
+    expect(within(resume).getByRole("heading", { name: "Personal details" })).toBeInTheDocument();
+    expect(within(resume).getByText("Dutch")).toBeInTheDocument();
+    // What it lacks, with the way to add it.
+    expect(screen.getByRole("note")).toHaveTextContent("A Gulf CV usually shows your visa status, notice period, driving licence and marital status.");
+    expect(screen.getByRole("link", { name: "Add them in your profile" })).toHaveAttribute("href", "/profile?section=basics");
+
+    await user.click(screen.getByRole("button", { name: "Resume format: Gulf CV" }));
+    await user.click(screen.getByRole("menuitemradio", { name: /^American resume/ }));
+    expect(setResumeFormat).toHaveBeenCalledWith({ id: "app-1", format: "US" });
+    expect(screen.getByRole("button", { name: "Resume format: American resume" })).toBeInTheDocument();
+    expect(within(resume).queryByRole("img", { name: profile.basics.name })).not.toBeInTheDocument();
+    expect(within(resume).queryByRole("heading", { name: "Personal details" })).not.toBeInTheDocument();
+
+  });
+
+  it("goes back to the job country's format, or to none (resume formats)", async () => {
+    const user = userEvent.setup();
+    render(<ApplicationView {...props} resumeFormat={{ chosen: "US", country: "in" }} />);
+    await user.click(screen.getByRole("button", { name: "Resume format: American resume" }));
+    await user.click(screen.getByRole("menuitemradio", { name: /^The job's country \(India\) Indian resume/ }));
+    expect(setResumeFormat).toHaveBeenLastCalledWith({ id: "app-1", format: null });
+    await user.click(screen.getByRole("button", { name: /^Resume format:/ }));
+    await user.click(screen.getByRole("menuitemradio", { name: "None: the theme as it is" }));
+    expect(setResumeFormat).toHaveBeenLastCalledWith({ id: "app-1", format: "NONE" });
   });
 
   it("has a Photo switch while the profile has a photo, starting from its Show on resumes (#224)", async () => {

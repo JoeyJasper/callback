@@ -16,13 +16,14 @@ export default async function PrintTailoredDocumentPage({ params }: PageProps<"/
   const { doc, id } = await params;
   if (doc !== "resume" && doc !== "letter") notFound();
   await verifyPrintAccess(`/print/${doc}/${id}`);
-  const { application, profile, settings, resume, letter, includeReferences, letterDate } = await loadDocuments(id);
+  const { application, profile, settings, resume, letter, includeReferences, letterDate, format } = await loadDocuments(id);
   const document = doc === "resume" ? resume : letter;
   if (!document) notFound();
 
   return (
     <>
-      <style>{printCss(document.theme, settings.paper)}</style>
+      {/* A resume's format by country sets its paper (US Letter or A4). */}
+      <style>{printCss(document.theme, doc === "resume" ? (format?.paper ?? settings.paper) : settings.paper)}</style>
       {doc === "resume" ? (
         <TailoredResume
           resume={document}
@@ -32,6 +33,7 @@ export default async function PrintTailoredDocumentPage({ params }: PageProps<"/
           showPhoto={application.showPhoto}
           language={application.language}
           includeReferences={includeReferences}
+          format={format}
         />
       ) : (
         <TailoredLetter

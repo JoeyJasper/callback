@@ -36,6 +36,13 @@ export const saveBasics = action(
     linkedin: text(500),
     summary: text(5000),
     showAge: z.boolean(),
+    // Personal details for the countries whose resumes show them (resume formats).
+    nationality: text(120).optional(),
+    visaStatus: text(200).optional(),
+    noticePeriod: text(120).optional(),
+    drivingLicence: text(120).optional(),
+    maritalStatus: text(60).optional(),
+    placeOfBirth: text(120).optional(),
   }),
   async (basics) => {
     const before = await loadProfileName();

@@ -58,6 +58,17 @@ describe("BasicsSection", () => {
     expect(saveBasics).toHaveBeenCalledWith({ ...empty, city: "Rotterdam" });
   });
 
+  it("keeps personal details for the CVs that ask for them, saved with the rest (resume formats)", async () => {
+    render(<Harness />);
+    expect(screen.getByRole("heading", { name: "For CVs that ask for them" })).toBeInTheDocument();
+    for (const label of ["Nationality", "Visa status", "Notice period", "Driving licence", "Marital status", "Place of birth"]) {
+      expect(screen.getByLabelText(`${label} (optional)`)).toHaveValue("");
+    }
+    fireEvent.change(screen.getByLabelText("Visa status (optional)"), { target: { value: "UAE employment visa" } });
+    await act(async () => fireEvent.blur(screen.getByLabelText("Visa status (optional)")));
+    expect(saveBasics).toHaveBeenCalledWith({ ...empty, visaStatus: "UAE employment visa" });
+  });
+
   it("explains the age option, with the computed age once there's a date of birth", () => {
     render(<Harness />);
     const option = screen.getByRole("checkbox", { name: /Show my age on resumes/ });
