@@ -266,6 +266,7 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
 
   // NEW-5: a missing skill goes into the profile, and the row becomes partly covered.
   const addToProfile = async (index: number, skill: string) => {
+    const shown = draft.read?.match.items[index]?.result === "covered";
     const result = toastResult(await addSkill({ name: skill }));
     if (!result.ok) return;
     const name = result.data.skill.name;
@@ -274,7 +275,7 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
       const items = current.read.match.items.map((item, position) => (position === index ? withSkillAdded(item, name) : item));
       return { ...current, read: { ...current.read, match: { items } } };
     });
-    toast(`Added “${name}” to your skills. Attach it to a role under Experience to make it count.`);
+    toast(shown ? `Added “${name}” to your skills.` : `Added “${name}” to your skills. Attach it to a role under Experience to make it count.`);
   };
 
   // E7-6: write the documents, then create the application from them.

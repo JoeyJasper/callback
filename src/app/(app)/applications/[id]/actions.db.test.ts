@@ -409,6 +409,19 @@ describe("addMatchSkill (E8-7)", () => {
     expect(await addMatchSkill({ id: "app-1", index: 1 })).toMatchObject({ ok: false });
     expect(await prisma().skill.count()).toBe(0);
   });
+
+  it("names a skill a line of the profile already shows, and keeps it covered", async () => {
+    const evidence = [{ source: "experience", id: "e1", label: "Engineer at Acme", text: "Ran Kubernetes clusters for six teams" }];
+    await prisma().application.update({
+      where: { id: "app-1" },
+      data: { match: { items: [{ ...item("Experience with Kubernetes", "covered"), note: "Shown in your work at Acme", evidence }, item("Fintech experience", "gap")] } },
+    });
+    expect(await addMatchSkill({ id: "app-1", index: 0 })).toEqual({ ok: true, data: { name: "Kubernetes" } });
+    const { match } = await prisma().application.findUniqueOrThrow({ where: { id: "app-1" } });
+    expect(match).toMatchObject({ items: [{ result: "covered", skill: "Kubernetes", note: "Shown in your work at Acme", evidence }, { result: "gap" }] });
+    // Once named, it can't be added again.
+    expect(await addMatchSkill({ id: "app-1", index: 0 })).toMatchObject({ ok: false });
+  });
 });
 
 describe("notes (E8-9)", () => {

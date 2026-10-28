@@ -97,7 +97,18 @@ export function jobForPrompt(extracted: Extracted, match: Match | null): string 
       role: extracted.role,
       location: extracted.location,
       requirements: match
-        ? match.items.map((item) => ({ requirement: item.requirement, inProfile: item.result, note: item.note }))
+        ? match.items.map((item, index) => {
+            const requirement = extracted.requirements[index];
+            return {
+              requirement: item.requirement,
+              inProfile: item.result,
+              note: item.note,
+              // The profile's own lines that show it, so the writing leads with them (the evidence matcher).
+              ...(item.evidence?.length ? { shownBy: item.evidence.map((line) => `${line.label}: ${line.text}`) } : {}),
+              ...(requirement?.mustHave === false ? { niceToHave: true } : {}),
+              ...(requirement?.keywords?.length ? { postingTerms: requirement.keywords } : {}),
+            };
+          })
         : extracted.requirements.map((requirement) => requirement.text),
     },
     null,

@@ -9,7 +9,7 @@ import type { ChatCall } from "../provider";
 import { MockProvider } from "../providers/mock";
 
 import { isoDate } from "./extract-posting";
-import { sameSkill } from "./match-requirements";
+import { mentions, profileLines, sameSkill } from "./match-requirements";
 import { COVER_LETTER_APPROACH } from "./prompt-parts";
 import { withoutFrame } from "./write-cover-letter";
 import { recipient } from "./write-email";
@@ -65,7 +65,7 @@ describe("extractPosting", () => {
   it("reads the posting as data and returns typed requirements with an ISO deadline (NEW-3)", async () => {
     const provider = model({ ...extracted, title: null, deadline: "15 October 2026", requirements: [...extracted.requirements, { text: " ", kind: "other", skill: null, years: null, language: null }] });
     const { data, promptVersion } = await extractPosting(provider, { posting: sample.ledgerly.posting, today }, options);
-    expect(promptVersion).toBe("extract-posting@2");
+    expect(promptVersion).toBe("extract-posting@3");
     expect(data).toMatchObject({ title: "Senior Product Designer · Ledgerly", deadline: "2026-10-15", asksForReferences: false, language: "English" });
     expect(data.requirements).toHaveLength(7);
     expect(sent(provider).messages[0].content).toMatch(/^<posting>\nLedgerly: Senior Product Designer/);
@@ -103,6 +103,20 @@ describe("extractPosting", () => {
     await expect(reading).rejects.toMatchObject({ kind: "cancelled" });
   });
 
+  it("marks nice-to-haves and keeps the posting's own terms, up to four, without empty ones", async () => {
+    const requirements = [
+      { ...extracted.requirements[3], mustHave: true, keywords: ["Figma", " prototyping ", "", "Figma"] },
+      { ...extracted.requirements[6], mustHave: false, keywords: [] },
+      { ...extracted.requirements[1], keywords: ["a", "b", "c", "d", "e"] },
+    ];
+    const { data } = await extractPosting(model({ ...extracted, requirements }), { posting, today }, options);
+    expect(data.requirements[0]).toMatchObject({ mustHave: true, keywords: ["Figma", "prototyping"] });
+    expect(data.requirements[1]).toMatchObject({ mustHave: false });
+    expect(data.requirements[1].keywords).toBeUndefined();
+    expect(data.requirements[2].mustHave).toBeUndefined();
+    expect(data.requirements[2].keywords).toEqual(["a", "b", "c", "d"]);
+  });
+
   it("only keeps whole dates", () => {
     expect(isoDate("2026-10-15")).toBe("2026-10-15");
     expect(isoDate("15 Oct 2026")).toBe("2026-10-15");
@@ -127,7 +141,7 @@ describe("matchRequirements", () => {
   it("classifies in code: covered with the roles as evidence, partial, gap (NEW-4)", async () => {
     const provider = model(answer);
     const { data, promptVersion } = await matchRequirements(provider, { requirements: extracted.requirements, profile, today }, options);
-    expect(promptVersion).toBe("match-requirements@1");
+    expect(promptVersion).toBe("match-requirements@2");
     expect(sent(provider).effort).toBe("low");
     expect(data.items.map((item) => [item.requirement, item.result, item.note])).toEqual([
       ["5+ years of product design", "covered", "3 roles in your profile, since Sep 2015"],
@@ -141,10 +155,75 @@ describe("matchRequirements", () => {
     expect(data.items[1]).toMatchObject({ skill: "Design systems", experienceIds: ["e1"] });
   });
 
-  it("calls a skill in the profile but in no role partial", async () => {
+  it("calls a skill in the profile but in no role, and in no line, partial", async () => {
     const unlinked = { ...profile, experience: profile.experience.map((entry) => ({ ...entry, skillIds: [] })) };
-    const { data } = await matchRequirements(model(answer), { requirements: extracted.requirements, profile: unlinked, today }, options);
-    expect(data.items[1]).toMatchObject({ result: "partial", note: "In your skills, but not linked to a role yet", experienceIds: [] });
+    const workshops = { text: "Facilitates workshops with stakeholders", kind: "skill" as const, skill: "Workshop facilitation", years: null, language: null };
+    const { data } = await matchRequirements(model({ matches: [{ requirement: 0, skill: "Workshop facilitation", language: null }] }), { requirements: [workshops], profile: unlinked, today }, options);
+    expect(data.items[0]).toMatchObject({ result: "partial", note: "In your skills, but not linked to a role yet", experienceIds: [] });
+    expect(data.items[0].evidence).toBeUndefined();
+  });
+
+  it("counts what a role's lines show, even when no skill is linked or listed (the evidence matcher)", async () => {
+    // Jane's design-system work is in her Northwind bullets; without the skill linked, the old matcher called it partial.
+    const unlinked = { ...profile, skills: [], experience: profile.experience.map((entry) => ({ ...entry, skillIds: [] })) };
+    const { data } = await matchRequirements(model({ matches: [] }), { requirements: [extracted.requirements[1]], profile: unlinked, today }, options);
+    expect(data.items[0]).toMatchObject({
+      result: "covered",
+      skill: null,
+      experienceIds: ["e1"],
+      note: "Shown in your work at Northwind Logistics",
+      evidence: [{ source: "experience", id: "e1", label: "Senior Product Designer at Northwind Logistics", text: "Built and maintained the design system across six product teams" }],
+    });
+  });
+
+  it("cites the lines the model points to, word for word, and drops the ones that don't exist", async () => {
+    const lines = profileLines(profile);
+    const mentoring = lines.findIndex((line) => line.text.startsWith("Mentored three junior designers"));
+    const requirements = [
+      { text: "Coaches and grows junior designers", kind: "other" as const, skill: null, years: null, language: null },
+      { text: "Experience with payments or fintech", kind: "other" as const, skill: null, years: null, language: null },
+    ];
+    const provider = model({
+      matches: [
+        { requirement: 0, skill: null, language: null, evidence: [mentoring, 999, mentoring], strength: "direct" },
+        { requirement: 1, skill: null, language: null, evidence: [-1, 500], strength: "direct" },
+      ],
+    });
+    const { data } = await matchRequirements(provider, { requirements, profile, today }, options);
+    expect(data.items[0]).toMatchObject({ result: "covered", experienceIds: ["e1"], note: "Shown in your work at Northwind Logistics" });
+    expect(data.items[0].evidence).toEqual([lines[mentoring]]);
+    expect(data.items[1]).toMatchObject({ result: "gap" });
+    expect(data.items[1].evidence).toBeUndefined();
+    // The model sees the profile's lines, numbered, with where each is from.
+    expect(prompt(provider)).toContain(`"number": ${mentoring}`);
+    expect(prompt(provider)).toContain('"from": "Senior Product Designer at Northwind Logistics"');
+  });
+
+  it("calls related work partial, with the line and a nudge to say how it carries over", async () => {
+    const lines = profileLines(profile);
+    const portal = lines.findIndex((line) => line.text.startsWith("Led the redesign of the carrier portal"));
+    const requirement = { text: "Has designed B2B SaaS dashboards", kind: "other" as const, skill: null, years: null, language: null };
+    const { data } = await matchRequirements(model({ matches: [{ requirement: 0, skill: null, language: null, evidence: [portal], strength: "related" }] }), { requirements: [requirement], profile, today }, options);
+    expect(data.items[0]).toMatchObject({ result: "partial", note: "Related: your work at Northwind Logistics. Say how it carries over.", experienceIds: ["e1"] });
+    expect(data.items[0].evidence?.[0].text).toBe(lines[portal].text);
+  });
+
+  it("doesn't take a wish in the candidate's facts as proof on its own", async () => {
+    // "I'd like to stay close to user research" names it without showing it.
+    const bare = { ...profile, skills: [], experience: profile.experience.map((entry) => ({ ...entry, skillIds: [] })) };
+    const { data } = await matchRequirements(model({ matches: [] }), { requirements: [extracted.requirements[2]], profile: bare, today }, options);
+    expect(data.items[0]).toMatchObject({ result: "gap" });
+  });
+
+  it("lists the profile's lines: roles, projects, degrees, facts and the summary", () => {
+    const lines = profileLines(profile);
+    expect(lines[0]).toEqual({ source: "experience", id: "e1", label: "Senior Product Designer at Northwind Logistics", text: "Led the redesign of the carrier portal used daily by 4,000+ dispatchers" });
+    expect(lines.map((line) => line.source)).toEqual(expect.arrayContaining(["experience", "project", "education", "fact", "summary"]));
+    expect(lines.find((line) => line.source === "project")).toMatchObject({ label: "Tidewater design tokens" });
+    expect(mentions("Built and maintained the design system", "Design systems")).toBe(true);
+    expect(mentions("Builds in C++ and C#", "C++")).toBe(true);
+    expect(mentions("Designed for the design-led systems team", "design systems")).toBe(false);
+    expect(mentions("Anything", "  ")).toBe(false);
   });
 
   it("forgives small differences in a skill's name, and falls back to the posting's", async () => {
@@ -189,6 +268,24 @@ describe("tailorResume", () => {
     education: [{ id: "d1", notes: "Thesis on trust in automation" }],
   };
 
+  it("tells the writer which lines prove each requirement, the posting's terms and what's only a plus", async () => {
+    const match: Match = {
+      items: extracted.requirements.map((requirement, index) =>
+        index === 1
+          ? { requirement: requirement.text, result: "covered", skill: "Design systems", experienceIds: ["e1"], note: "Used at Northwind Logistics", evidence: [{ source: "experience", id: "e1", label: "Senior Product Designer at Northwind Logistics", text: "Built and maintained the design system across six product teams" }] }
+          : { requirement: requirement.text, result: "gap", skill: null, experienceIds: [], note: null },
+      ),
+    };
+    const job = { ...extracted, requirements: extracted.requirements.map((requirement, index) => (index === 1 ? { ...requirement, keywords: ["design system"] } : index === 6 ? { ...requirement, mustHave: false } : requirement)) };
+    const provider = model(answer);
+    await tailorResume(provider, { profile, extracted: job, match, facts: [], posting }, options);
+    const text = prompt(provider);
+    expect(text).toContain('"shownBy": [\n        "Senior Product Designer at Northwind Logistics: Built and maintained the design system across six product teams"');
+    expect(text).toContain('"postingTerms": [\n        "design system"');
+    expect(text).toContain('"niceToHave": true');
+    expect(text).toMatch(/Never add a term the candidate's lines don't back/);
+  });
+
   it("sends the profile without contact details, with the guardrails, the language and the facts (PRD §7, SET-4, PRO-14, APP-15)", async () => {
     const provider = model(answer);
     await tailorResume(provider, { profile, extracted, match: null, facts: ["Mention my interest in fintech."], posting }, options);
@@ -217,7 +314,7 @@ describe("tailorResume", () => {
 
   it("returns units, keeping only real roles and the profile's own skills (APP-4)", async () => {
     const { data, promptVersion } = await tailorResume(model(answer), { profile, extracted, match: null, facts: [], posting }, options);
-    expect(promptVersion).toBe("tailor-resume@6");
+    expect(promptVersion).toBe("tailor-resume@7");
     expect(data.map((unit) => unit.id)).toEqual([
       "summary",
       "experience:e1",

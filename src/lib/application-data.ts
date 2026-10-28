@@ -49,6 +49,16 @@ export const requirementSchema = z.object({
   years: z.number().nullable(),
   /** For a spoken language: its English name, e.g. "Dutch". */
   language: z.string().nullable(),
+  /**
+   * Whether the posting treats it as required rather than a plus. Absent on
+   * postings read before this was asked for, which counts as required.
+   */
+  mustHave: z.boolean().optional(),
+  /**
+   * The exact words from the posting an applicant tracking system would look
+   * for, e.g. ["Figma", "prototyping"]. Absent on older postings.
+   */
+  keywords: z.array(z.string()).optional(),
 });
 export type Requirement = z.infer<typeof requirementSchema>;
 
@@ -103,21 +113,43 @@ export function extractedOf(application: {
 
 /**
  * How a requirement matches the profile (NEW-4): covered (the skill is used in
- * a role), partial (the skill is in the profile but not attached to a role)
- * or gap (not in the profile).
+ * a role, or a line of the profile shows it), partial (the skill is in the
+ * profile but not attached to a role, or only related work shows) or gap
+ * (nothing in the profile).
  */
 export const matchResults = ["covered", "partial", "gap"] as const;
 export type MatchResult = (typeof matchResults)[number];
+
+/** Where in the profile a line of evidence comes from. */
+export const evidenceSources = ["experience", "project", "education", "publication", "fact", "summary"] as const;
+export type EvidenceSource = (typeof evidenceSources)[number];
+
+/**
+ * A line of the profile that shows a requirement is met, quoted word for word
+ * from the profile (the evidence matcher), so the user can check it.
+ */
+export const evidenceSchema = z.object({
+  source: z.enum(evidenceSources),
+  /** The role, project or degree's id; "" for a fact or the summary. */
+  id: z.string(),
+  /** Where it's from, e.g. "Senior Product Designer at Northwind Logistics". */
+  label: z.string(),
+  /** The profile's own line. */
+  text: z.string(),
+});
+export type Evidence = z.infer<typeof evidenceSchema>;
 
 export const matchItemSchema = z.object({
   requirement: z.string(),
   result: z.enum(matchResults),
   /** The profile skill or language the requirement maps to, if any. */
   skill: z.string().nullable(),
-  /** The roles where that skill was used. */
+  /** The roles where that skill was used, or where the evidence is from. */
   experienceIds: z.array(z.string()),
   /** A short explanation, e.g. "Nothing in your profile, so I'll address it honestly in the letter". */
   note: z.string().nullable(),
+  /** The profile's lines that show it, best first. Absent on matches made before evidence. */
+  evidence: z.array(evidenceSchema).optional(),
 });
 
 /** Application.match */
@@ -126,6 +158,8 @@ export type Match = z.infer<typeof matchSchema>;
 
 /** A gap after its skill was added to the profile (NEW-5): in the profile, not yet used in a role. */
 export function withSkillAdded(item: Match["items"][number], skill: string): Match["items"][number] {
+  // Already shown by a line of the profile: adding the skill only names it.
+  if (item.result === "covered") return { ...item, skill };
   return { ...item, result: "partial", skill, note: "In your skills, but not linked to a role yet" };
 }
 

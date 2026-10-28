@@ -461,9 +461,10 @@ export function ApplicationView({
   /** "+ Add to profile" on the Job posting tab (E8-7). */
   const addSkill = (index: number) =>
     startTransition(async () => {
+      const shown = match?.items[index]?.result === "covered";
       const result = await addMatchSkill({ id: application.id, index });
       if (!result.ok) return toast(result.error);
-      toast(`Added “${result.data.name}” to your skills. Attach it to a role under Experience to make it count.`);
+      toast(shown ? `Added “${result.data.name}” to your skills.` : `Added “${result.data.name}” to your skills. Attach it to a role under Experience to make it count.`);
     });
 
   /** "Put back" something left out, to fit the page limit (E10-10) or by hand (#217). */

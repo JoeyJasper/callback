@@ -4,7 +4,7 @@ import { extractedSchema, requirementSchema, type Extracted } from "@/lib/applic
 
 import { postingForPrompt, system, UNTRUSTED_POSTING, type Task } from "./prompt-parts";
 
-export const EXTRACT_POSTING_VERSION = "extract-posting@2";
+export const EXTRACT_POSTING_VERSION = "extract-posting@3";
 
 // What the model returns. The deadline is free text here and checked in
 // code, since models like to answer "15 Oct" rather than an ISO date. Small
@@ -22,6 +22,9 @@ const answerSchema = z.object({
       skill: z.string().nullable().default(null),
       years: z.number().nullable().default(null),
       language: z.string().nullable().default(null),
+      // Small models leave these out too: then it's treated as required, with no keywords.
+      mustHave: z.boolean().nullable().default(null),
+      keywords: z.array(z.string()).nullable().default(null),
     }),
   ),
   asksForReferences: z.boolean(),
@@ -41,6 +44,8 @@ const INSTRUCTIONS = `You read job postings and pull out their details as JSON.
   - "skill" for a skill, tool or method, with skill set to a short name ("Figma", "Design systems", "User research");
   - "other" for anything else, such as domain experience.
   Leave the fields that don't apply null.
+  mustHave is true when the posting requires it, false when it's a plus ("nice to have", "ideally", "bonus", "preferred", "is a plus").
+  keywords: the exact words or short phrases from the posting that an applicant tracking system would search a resume for to check this requirement, as written in the posting (e.g. ["Figma", "prototyping"]); up to four, [] when none.
 - asksForReferences: true only if the posting explicitly asks applicants to provide references; otherwise false.
 - language: the language the posting is written in, as its English name.`;
 
@@ -76,7 +81,12 @@ export const extractPosting: Task<{ posting: string; today?: Date }, Extracted> 
       company,
       title: answer.title?.trim() || (role && company ? `${role} · ${company}` : null),
       deadline: isoDate(answer.deadline),
-      requirements: answer.requirements.filter((requirement) => requirement.text.trim()),
+      requirements: answer.requirements
+        .filter((requirement) => requirement.text.trim())
+        .map(({ mustHave, keywords, ...requirement }) => {
+          const terms = [...new Set((keywords ?? []).map((term) => term.trim()).filter((term) => term && term.length <= 60))].slice(0, 4);
+          return { ...requirement, ...(mustHave === null ? {} : { mustHave }), ...(terms.length > 0 ? { keywords: terms } : {}) };
+        }),
     }),
     promptVersion: EXTRACT_POSTING_VERSION,
   };

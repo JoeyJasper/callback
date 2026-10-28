@@ -300,7 +300,9 @@ export const addMatchSkill = action(z.object({ id: z.string().min(1), index: z.n
   const extracted = extractedSchema.safeParse(application.extracted);
   const item = match.success ? match.data.items[index] : undefined;
   const requirement = extracted.success ? extracted.data.requirements[index] : undefined;
-  if (!match.success || !item || item.result !== "gap" || requirement?.kind !== "skill" || !requirement.skill) {
+  // A gap, or a requirement a line of the profile shows but the skills list doesn't name yet.
+  const addable = item && (item.result === "gap" || (item.result === "covered" && !item.skill));
+  if (!match.success || !item || !addable || requirement?.kind !== "skill" || !requirement.skill) {
     throw new ActionError("That requirement can't be added to your profile. Reload the page to see what's there now.");
   }
 

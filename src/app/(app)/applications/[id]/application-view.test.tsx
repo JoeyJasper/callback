@@ -706,6 +706,21 @@ describe("the Job posting tab (E8-7)", () => {
     expect(toast).toHaveBeenCalledWith("Added “Kubernetes” to your skills. Attach it to a role under Experience to make it count.");
   });
 
+  it("shows the profile's lines that prove a requirement, marks nice-to-haves, and names a shown skill", async () => {
+    const user = userEvent.setup();
+    const evidence = [{ source: "project" as const, id: "p1", label: "Tidewater", text: "Runs Kubernetes for the plugin's preview builds" }];
+    open({
+      requirements: [requirements[0], { ...requirements[1], mustHave: false }],
+      match: { items: [match.items[0], { ...match.items[1], result: "covered", note: "Shown in your Tidewater project", evidence }] },
+    });
+    const evidenceList = screen.getByRole("list", { name: "Evidence from your profile" });
+    expect(evidenceList).toHaveTextContent("“Runs Kubernetes for the plugin's preview builds”");
+    expect(screen.getByText("· nice to have")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "+ Add to skills" }));
+    expect(addMatchSkill).toHaveBeenCalledWith({ id: "app-1", index: 1 });
+    expect(toast).toHaveBeenCalledWith("Added “Kubernetes” to your skills.");
+  });
+
   it("links to the saved posting in a new tab", () => {
     open({ posting: { ...props.posting, url: "https://jobs.ledgerly.com/senior-designer" } });
     const link = within(screen.getByRole("tabpanel")).getByRole("link", { name: "jobs.ledgerly.com/senior-designer (opens in a new tab)" });

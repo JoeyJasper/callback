@@ -38,7 +38,11 @@ export function MatchRows({
       <ul aria-label="Requirements">
         {match.items.map((item, index) => {
           const { mark, label, className } = MARKS[item.result];
-          const skill = requirements[index]?.kind === "skill" ? requirements[index].skill : null;
+          const requirement = requirements[index];
+          const skill = requirement?.kind === "skill" ? requirement.skill : null;
+          const niceToHave = requirement?.mustHave === false;
+          // Shown by a line but not in the skills list yet: naming it helps the next match and the resume's skills.
+          const canAdd = skill && (item.result === "gap" || (item.result === "covered" && !item.skill));
           return (
             <li key={index} className="flex items-start gap-3.5 border-t border-line py-[13px]">
               <span aria-hidden className={cn("grid size-[22px] flex-none place-items-center rounded-full border text-xs font-semibold", className)}>
@@ -48,12 +52,22 @@ export function MatchRows({
                 <p className="text-field">
                   <span className="sr-only">{label}: </span>
                   {item.requirement}
+                  {niceToHave && <span className="ml-2 text-meta whitespace-nowrap text-muted">· nice to have</span>}
                 </p>
                 {item.note && <p className="text-meta text-muted">{item.note}</p>}
+                {item.evidence && item.evidence.length > 0 && (
+                  <ul aria-label="Evidence from your profile" className="mt-1 flex flex-col gap-1">
+                    {item.evidence.map((line, position) => (
+                      <li key={position} className="border-l-2 border-line-strong pl-2.5 text-meta">
+                        “{line.text}”
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              {item.result === "gap" && skill && (
+              {canAdd && (
                 <Button variant="secondary" size="sm" className="flex-none" onClick={() => onAddSkill(index, skill)}>
-                  + Add to profile
+                  {item.result === "gap" ? "+ Add to profile" : "+ Add to skills"}
                 </Button>
               )}
             </li>
