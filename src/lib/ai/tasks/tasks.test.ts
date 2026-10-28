@@ -15,6 +15,7 @@ import { withoutFrame } from "./write-cover-letter";
 import { recipient } from "./write-email";
 import {
   extractPosting,
+  interviewPrep,
   matchRequirements,
   refineChat,
   regenerateUnit,
@@ -696,5 +697,61 @@ describe("the profile photo (#224)", () => {
         expect([system, ...messages.map((message) => message.content)].join("\n")).not.toMatch(/data:image|iVBORw0KGgo|"photo"/);
       }
     }
+  });
+});
+
+describe("interviewPrep (the interview prep pack)", () => {
+  const answer = {
+    pitch: "I'm a product designer who makes complex tools calm. At Northwind Logistics I led the carrier portal redesign.",
+    questions: [
+      {
+        question: "Tell me about a design system you built.",
+        why: "Whether you can build shared foundations.",
+        situation: "Six product teams at Northwind Logistics each drew their own components.",
+        task: "I had to give them one system.",
+        action: "I built and maintained the design system with the teams.",
+        result: "Teams shipped consistent screens, and support tickets dropped 40%.",
+        from: "e1",
+      },
+      { question: "  ", why: "", situation: "", task: "", action: "", result: "", from: null },
+      { question: "Why payments?", why: "Motivation.", situation: "A", task: "B", action: "C", result: "D", from: "e99" },
+    ],
+    gaps: [
+      { requirement: "Accessibility know-how (WCAG 2.2)", approach: "Say what you do today, and that you'd take a WCAG course first." },
+      { requirement: "", approach: "Nothing" },
+    ],
+    askThem: ["How does the team measure success?", " ", "a", "b", "c", "d", "e"],
+  };
+
+  it("sends the profile, the job and the posting with the guardrails, in the documents' language", async () => {
+    const provider = model(answer);
+    const { promptVersion } = await interviewPrep(provider, { profile, extracted, match: null, facts: ["They're hiring for a new team."], posting }, { ...options, language: "Dutch" });
+    expect(promptVersion).toBe("interview-prep@1");
+    const text = prompt(provider);
+    expect(text).toMatch(/STAR answer told from ONE real role or project in the profile/);
+    expect(text).toMatch(/Never invent or embellish an employer/);
+    expect(text).toContain("Write everything in Dutch.");
+    expect(text).toContain("<posting>");
+    expect(text).toContain("- They're hiring for a new team.");
+    expect(text).not.toContain(profile.basics.email);
+    expect(sent(provider).json?.name).toBe("interview_prep");
+  });
+
+  it("names each story's role from the profile, drops empty parts, keeps the lists short and flags what the profile doesn't back", async () => {
+    const { data } = await interviewPrep(model(answer), { profile, extracted, match: null, facts: [], posting }, options);
+    expect(data.questions).toHaveLength(2);
+    expect(data.questions[0]).toMatchObject({ from: "Senior Product Designer at Northwind Logistics", answer: { action: "I built and maintained the design system with the teams." } });
+    // A role that isn't in the profile isn't named.
+    expect(data.questions[1].from).toBe("");
+    // "40%" is in neither the profile nor the posting.
+    expect(data.questions[0].unverified).toEqual(["40%"]);
+    expect(data.pitchUnverified).toBeUndefined();
+    expect(data.gaps).toEqual([{ requirement: "Accessibility know-how (WCAG 2.2)", approach: "Say what you do today, and that you'd take a WCAG course first." }]);
+    expect(data.askThem).toEqual(["How does the team measure success?", "a", "b", "c", "d"]);
+  });
+
+  it("doesn't flag anything when strict mode is off", async () => {
+    const { data } = await interviewPrep(model(answer), { profile, extracted, match: null, facts: [], posting }, { ...options, strict: false });
+    expect(data.questions[0].unverified).toBeUndefined();
   });
 });

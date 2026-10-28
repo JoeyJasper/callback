@@ -171,6 +171,36 @@ export function matchScore(match: Match): { hit: number; total: number } {
   };
 }
 
+/** A STAR answer (situation, task, action, result), from the candidate's own experience. */
+export const starSchema = z.object({ situation: z.string(), task: z.string(), action: z.string(), result: z.string() });
+
+/**
+ * Application.interviewPrep: the interview prep pack, written from the
+ * profile and the posting. `unverified` lists what the fact guard couldn't
+ * find in either, as on documents (E6-6).
+ */
+export const interviewPrepSchema = z.object({
+  /** "Tell me about yourself": about a minute, in the first person. */
+  pitch: z.string(),
+  pitchUnverified: z.array(z.string()).optional(),
+  questions: z.array(
+    z.object({
+      question: z.string(),
+      /** What the interviewer is checking with it. */
+      why: z.string(),
+      answer: starSchema,
+      /** The role or project the story is from, e.g. "Senior Product Designer at Northwind Logistics". */
+      from: z.string(),
+      unverified: z.array(z.string()).optional(),
+    }),
+  ),
+  /** The requirements the profile doesn't cover, and how to talk about each honestly. */
+  gaps: z.array(z.object({ requirement: z.string(), approach: z.string(), unverified: z.array(z.string()).optional() })),
+  /** Questions to ask the interviewer, specific to this job. */
+  askThem: z.array(z.string()),
+});
+export type InterviewPrep = z.infer<typeof interviewPrepSchema>;
+
 /** One unit change made from the chat, with the text it replaced so it can be undone (APP-8). */
 export const unitEditSchema = z.object({
   document: z.enum(DocumentKind),

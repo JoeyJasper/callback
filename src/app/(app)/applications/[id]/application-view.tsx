@@ -19,7 +19,7 @@ import {
   type PaperSize,
   type Tone,
 } from "@/generated/prisma/enums";
-import { type Match, type Requirement, type Unit } from "@/lib/application-data";
+import { type InterviewPrep, type Match, type Requirement, type Unit } from "@/lib/application-data";
 import { EMAIL_UNITS, WRITTEN_EMAIL_UNITS } from "@/lib/application-email";
 import { documentLabels } from "@/lib/document-labels";
 import { defaultFrame, isFrameUnit, isParagraph, withFrame, WRITTEN_FRAME_UNITS } from "@/lib/letter-frame";
@@ -61,6 +61,7 @@ import type { GmailSender } from "./send-with-gmail";
 import { JobWatcher } from "./job-watcher";
 import { NotesTab } from "./notes-tab";
 import { PostingTab, type PostingData } from "./posting-tab";
+import { PrepTab } from "./prep-tab";
 import { RefinePanel, type ChatEntry } from "./refine-panel";
 import { StatusControl } from "./status-control";
 import { ThemeMenu } from "./theme-menu";
@@ -160,6 +161,9 @@ export type ApplicationViewProps = {
   /** A reply still being written, e.g. since before a reload. */
   refining: string | null;
   suggestions: RefineSuggestions;
+  /** The interview prep pack, once written, and the job writing it, if one is. */
+  prep: InterviewPrep | null;
+  preparing: string | null;
 };
 
 /**
@@ -196,6 +200,8 @@ export function ApplicationView({
   messages,
   refining,
   suggestions,
+  prep,
+  preparing,
 }: ApplicationViewProps) {
   const router = useRouter();
   const [tab, setTab] = useState(initialTab);
@@ -664,6 +670,7 @@ export function ApplicationView({
           )}
           <TabsTrigger value="posting">{score ? `Job posting · ${score.hit}/${score.total} match` : "Job posting"}</TabsTrigger>
           {coverage && <TabsTrigger value="ats">{coverage.score === null ? "ATS check" : `ATS check · ${coverage.score}%`}</TabsTrigger>}
+          <TabsTrigger value="prep">Interview prep</TabsTrigger>
           <TabsTrigger value="notes">{notes > 0 ? `Notes · ${notes}` : "Notes"}</TabsTrigger>
         </TabsList>
       </ApplicationHeader>
@@ -784,6 +791,10 @@ export function ApplicationView({
           ) : (
             <MissingDocument>This application has no tailored resume.</MissingDocument>
           )}
+        </TabsContent>
+
+        <TabsContent value="prep" className="flex min-h-0 min-w-0 flex-[999_1_480px]">
+          <PrepTab applicationId={application.id} prep={prep} preparing={preparing} aiReady={aiReady} interviewing={application.status === "INTERVIEW"} />
         </TabsContent>
 
         <TabsContent value="notes" className="flex min-h-0 min-w-0 flex-[999_1_480px]">

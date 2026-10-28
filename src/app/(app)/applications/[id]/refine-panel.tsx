@@ -32,6 +32,7 @@ const SUBTITLES: Record<Tab, string> = {
   conversation: "Answers to employers are drafted right in the conversation.",
   posting: "Switch to the resume, cover letter or email to make changes.",
   ats: "Ask for changes to your tailored resume. I'll only use what's in your profile.",
+  prep: "Switch to the resume, cover letter or email to make changes.",
   notes: "Switch to the resume, cover letter or email to make changes.",
 };
 

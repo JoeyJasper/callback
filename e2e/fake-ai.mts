@@ -44,27 +44,67 @@ const answers: Record<string, (messages: Message[]) => unknown> = {
     deadline: null,
     requirements: [
       { text: "5+ years of product design", kind: "years", skill: null, years: 5, language: null },
-      { text: "Built or maintained a design system", kind: "skill", skill: "Design systems", years: null, language: null },
-      { text: "Strong prototyping skills in Figma", kind: "skill", skill: "Figma", years: null, language: null },
-      { text: "Experience with Kubernetes", kind: "skill", skill: "Kubernetes", years: null, language: null },
-      { text: "Dutch is a plus", kind: "language", skill: null, years: null, language: "Dutch" },
+      { text: "Built or maintained a design system", kind: "skill", skill: "Design systems", years: null, language: null, mustHave: true, keywords: ["design system"] },
+      { text: "Strong prototyping skills in Figma", kind: "skill", skill: "Figma", years: null, language: null, mustHave: true, keywords: ["Figma", "prototyping"] },
+      { text: "Mentors junior designers", kind: "other", skill: null, years: null, language: null, mustHave: true, keywords: ["mentoring"] },
+      { text: "Experience with Kubernetes", kind: "skill", skill: "Kubernetes", years: null, language: null, mustHave: true, keywords: ["Kubernetes"] },
+      { text: "Dutch is a plus", kind: "language", skill: null, years: null, language: "Dutch", mustHave: false, keywords: ["Dutch"] },
     ],
     asksForReferences: false,
     language: "English",
   }),
 
+  interview_prep: (messages) => {
+    const profile = section(messages[1].content, "The candidate's profile:\n") as Profile;
+    const role = profile.experience[0];
+    return {
+      pitch: `${profile.summary} I'd like to bring that to this role.`,
+      questions: [
+        {
+          question: "Tell me about a design system you built or maintained.",
+          why: "Whether you can build foundations other teams rely on.",
+          situation: "Several product teams were each drawing their own components.",
+          task: "I set out to give them one shared system.",
+          action: role?.bullets[1] ?? "I built and maintained the design system with the teams.",
+          result: "The teams shipped consistent screens from shared components.",
+          from: role?.id ?? null,
+        },
+        {
+          question: "Why do you want to work here?",
+          why: "Motivation, and whether you've looked into the company.",
+          situation: "I've followed the company's product for a while.",
+          task: "I'm looking for work where clarity matters.",
+          action: "I read up on the team and the product before applying.",
+          result: "This role fits what I do best.",
+          from: role?.id ?? null,
+        },
+      ],
+      gaps: [{ requirement: "Experience with Kubernetes", approach: "Say you haven't run it yourself, and how you work closely with engineers who do." }],
+      askThem: ["How does the team measure success in the first six months?", "What does a typical week look like for this role?"],
+    };
+  },
+
   requirement_matches: (messages) => {
-    const { requirements, candidateSkills, candidateLanguages } = JSON.parse(messages[1].content) as {
+    const { requirements, candidateSkills, candidateLanguages, candidateLines = [] } = JSON.parse(messages[1].content) as {
       requirements: { number: number; text: string; skill: string | null }[];
       candidateSkills: string[];
       candidateLanguages: string[];
+      candidateLines?: { number: number; text: string }[];
     };
+    // Lines that share a telling word with the requirement, as evidence (the evidence matcher).
+    const telling = (text: string) => text.toLowerCase().match(/\b(mentor\w*|design system\w*|prototyp\w*)/g) ?? [];
     return {
-      matches: requirements.map((requirement) => ({
-        requirement: requirement.number,
-        skill: candidateSkills.find((name) => name.toLowerCase() === requirement.skill?.toLowerCase()) ?? null,
-        language: candidateLanguages.find((name) => requirement.text.includes(name)) ?? null,
-      })),
+      matches: requirements.map((requirement) => {
+        const words = telling(requirement.text).map((word) => word.slice(0, 6));
+        const evidence = words.length ? candidateLines.filter((line) => telling(line.text).some((word) => words.includes(word.slice(0, 6)))).map((line) => line.number).slice(0, 2) : [];
+        return {
+          requirement: requirement.number,
+          skill: candidateSkills.find((name) => name.toLowerCase() === requirement.skill?.toLowerCase()) ?? null,
+          language: candidateLanguages.find((name) => requirement.text.includes(name)) ?? null,
+          evidence,
+          strength: evidence.length ? "direct" : "none",
+        };
+      }),
     };
   },
 

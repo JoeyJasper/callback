@@ -3,13 +3,14 @@ import { cache } from "react";
 
 import { activityTimeline } from "@/lib/activity";
 import { isAiConfigured } from "@/lib/ai/config";
-import { editsSchema, matchSchema, matchScore } from "@/lib/application-data";
+import { editsSchema, interviewPrepSchema, matchSchema, matchScore } from "@/lib/application-data";
 import { loadApplication, loadDocuments, readJson } from "@/lib/application-documents";
 import { formatShortDate } from "@/lib/dates";
 import { resolveFileName } from "@/lib/file-name";
 import { refineJobKey } from "@/lib/jobs/refine";
 import { regenerateUnitJob, unitJobKey } from "@/lib/jobs/regenerate-unit";
 import { findUnfinishedJobs } from "@/lib/jobs/runner";
+import { prepJobKey } from "@/lib/jobs/interview-prep";
 import { emailJobKey } from "@/lib/jobs/write-email";
 import { googleConnection } from "@/lib/google/account";
 import { pullInterviewEvents } from "@/lib/google/availability";
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: PageProps<"/applications/[id]
 export default async function ApplicationPage({ params, searchParams }: PageProps<"/applications/[id]">) {
   const [{ id }, { tab }] = await Promise.all([params, searchParams]);
   await pullCalendar(id);
-  const [{ application, profile, settings, extracted, resume, letter, email, includeReferences, letterDate }, aiReady, unitJobs, refineJobs, emailJobs, timeZone, google, emails, themes] =
+  const [{ application, profile, settings, extracted, resume, letter, email, includeReferences, letterDate }, aiReady, unitJobs, refineJobs, emailJobs, timeZone, google, emails, themes, prepJobs] =
     await Promise.all([
       loadDocuments(id),
       isAiConfigured(),
@@ -51,6 +52,7 @@ export default async function ApplicationPage({ params, searchParams }: PageProp
       googleConnection(),
       loadConversation(id),
       loadThemes(),
+      findUnfinishedJobs(prepJobKey(id)),
     ]);
 
   const match = readJson(matchSchema, application.match);
@@ -138,6 +140,8 @@ export default async function ApplicationPage({ params, searchParams }: PageProp
       rewriting={rewriting}
       messages={messages}
       refining={refineJobs.at(-1)?.id ?? null}
+      prep={readJson(interviewPrepSchema, application.interviewPrep)}
+      preparing={prepJobs.at(-1)?.id ?? null}
       suggestions={refineSuggestions({
         match,
         requirements: extracted?.requirements ?? [],
