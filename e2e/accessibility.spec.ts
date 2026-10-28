@@ -44,6 +44,7 @@ const SCREENS = [
   "/startups",
   "/agent",
   "/inbox",
+  "/insights",
   // The dashboard's calendar on another month.
   "/?date=2026-11-01",
   "/settings?section=ai",
@@ -87,7 +88,7 @@ test.describe("dark, with the sidebar collapsed", () => {
   test("axe: an application, on every tab", async ({ page }) => {
     await page.goto(application);
     await expectAccessible(page);
-    for (const tab of ["Cover letter", "Email", /^Job posting/, /^Notes/]) {
+    for (const tab of ["Cover letter", "Email", /^Job posting/, /^ATS check/, "Interview prep", /^Notes/]) {
       await page.getByRole("tab", { name: tab }).click();
       await expectAccessible(page);
     }

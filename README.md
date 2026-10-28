@@ -23,6 +23,18 @@ It's for one person on a small server: one password, your data in your own Postg
 
 **Get started:** [run it on your computer](#run-it-on-your-computer) in a few minutes, or [self-host it](#self-hosting) on a server. The [installation guide](https://github.com/AienTech/dossier/wiki) covers every way: Docker with or without Compose, Node.js, a plain Ubuntu server, CapRover, Coolify and Dokploy.
 
+## This fork: more interviews per application
+
+On top of Dossier 1.9.2, this copy adds:
+
+- **Evidence matcher:** each of a posting's requirements is matched against every line of your profile (roles, projects, studies, facts), not just your skills list, with the line that proves it quoted. A gap is shown only when nothing in your profile shows it.
+- **ATS check:** a tab on each application shows which of the posting's required keywords are in your tailored resume, and test-reads the actual PDF the way an applicant tracking system does, flagging lost contact details, headings and scrambled lines, with a fix for each. Built-in themes were fixed where they failed it.
+- **Insights (outcome learning):** your answer and interview rates by fit score, keywords, kind of role, source, tone and resume format, what stands out, and a better minimum score for the job agent, which also ranks postings by what has worked for you.
+- **Multi-search agent:** up to five searches a run (other titles, places or countries), shared fairly.
+- **Interview prep:** a pitch, likely questions with STAR answers from your own roles, how to talk about each gap, and questions to ask.
+- **Resume formats by country:** Gulf, Indian, German, European, UK, American, Canadian and Australian formats, picked from the job's country: paper size, photo, personal details such as nationality and visa status, and India's declaration.
+- **For you and your friends:** [`friends/`](friends/README.md) runs a separate Dossier for each person on one server, each on their own address with HTTPS, added with one command.
+
 ## Demo
 
 ![Dossier in use: the dashboard, dragging a card on the board, a new application from a pasted posting, refining the tailored resume in the chat, the cover letter, and switching resume themes](.github/images/demo.gif)

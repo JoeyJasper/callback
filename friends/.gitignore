@@ -1,0 +1,8 @@
+# Made on the server by the scripts; they hold passwords and keys.
+.env
+shared.env
+people/*.env
+removed/
+people.yml
+Caddyfile
+backups/

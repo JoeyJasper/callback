@@ -1,0 +1,42 @@
+# Dossier for you and your friends: one server, a separate Dossier and
+# database for each person, each on their own web address with HTTPS.
+# Don't run this file by hand: use the scripts in this folder (README.md).
+#
+# people.yml (made by the scripts) adds one app per person; the Caddyfile
+# (also made by the scripts) sends each person's address to their app.
+
+name: dossier-friends
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dossier
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run setup.sh first}
+      POSTGRES_DB: dossier
+    volumes:
+      # Postgres 18+ keeps data in a versioned subdirectory, so mount the parent.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dossier -d dossier"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Gets and renews the HTTPS certificates, and sends each address to its person's app.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

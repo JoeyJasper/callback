@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, Star } from "lucide-react";
+import { ArrowUpRight, Code, Star } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { REPOSITORY_URL } from "@/lib/releases";
@@ -16,6 +16,7 @@ const LABEL = "Star on GitHub";
 export function RepositoryLink({ sourceUrl = null }: { sourceUrl?: string | null }) {
   const collapsed = useSidebarCollapsed();
   const label = sourceUrl ? "Source code" : LABEL;
+  const Icon = sourceUrl ? Code : Star;
   return (
     <a
       href={sourceUrl ?? REPOSITORY_URL}
@@ -27,7 +28,7 @@ export function RepositoryLink({ sourceUrl = null }: { sourceUrl?: string | null
         collapsed && "justify-center px-1.5",
       )}
     >
-      <Star size={16} aria-hidden="true" className="shrink-0" />
+      <Icon size={16} aria-hidden="true" className="shrink-0" />
       <span className={cn(collapsed && "sr-only")}>{label}</span>{" "}
       <span className="sr-only">(opens in a new tab)</span>
       {!collapsed && <ArrowUpRight size={14} aria-hidden="true" className="ml-auto shrink-0" />}
