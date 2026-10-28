@@ -54,7 +54,7 @@ describe("UpdateNotice", () => {
   it("is an icon with a dot in the collapsed sidebar, which opens it on the notice", async () => {
     const user = userEvent.setup();
     render(
-      <SidebarFrame initialCollapsed brand={<span>Dossier</span>}>
+      <SidebarFrame initialCollapsed brand={<span>Callback</span>}>
         <UpdateNotice release={release} currentVersion="1.5.0" />
       </SidebarFrame>,
     );

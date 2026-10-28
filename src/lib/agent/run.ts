@@ -29,7 +29,7 @@ import { recordRunEnd, recordRunStart, runLimitProblem } from "./runs";
 
 // One run of the job agent (E16-3): one search, the postings seen before
 // dropped, and a score for the newest of the rest. It never sends anything.
-// Adapted from avinashbatchala's fork of Dossier.
+// Adapted from avinashbatchala's fork of Callback.
 
 export const agentScanResultSchema = z.object({
   /** Postings the source returned. */

@@ -1,6 +1,8 @@
-# Dossier for you and your friends
+# Callback for you and your friends
 
-One server runs a separate Dossier for each person. Each one gets:
+Callback is built on [Dossier](https://github.com/AienTech/dossier) by AienTech, changed in October 2026, and is free software under the same licence, the AGPL-3.0.
+
+One server runs a separate Callback for each person. Each one gets:
 
 - their own web address, like `https://priya.jobs.example.com`, with HTTPS;
 - their own password;
@@ -10,7 +12,7 @@ You add a person with one command. Everything below is typed into the server's t
 
 ## What you need
 
-- **A server** running Ubuntu 24.04. Each person's Dossier holds about 400 MB of memory once it's been used, and about 300 MB more for a few minutes after it makes a PDF. So:
+- **A server** running Ubuntu 24.04. Each person's Callback holds about 400 MB of memory once it's been used, and about 300 MB more for a few minutes after it makes a PDF. So:
 
   | People | Memory | CPUs |
   |--------|--------|------|
@@ -24,7 +26,7 @@ You add a person with one command. Everything below is typed into the server's t
 
 ## 1. Put your copy on GitHub
 
-Your server downloads Dossier from your GitHub copy, and the licence asks that the people using your changed version can see its source code there.
+Your server downloads Callback from your GitHub copy, and the licence asks that the people using your changed version can see its source code there.
 
 1. Sign in at [github.com](https://github.com) (create a free account if you don't have one).
 2. Your copy is [github.com/JoeyJasper/dossier-plus](https://github.com/JoeyJasper/dossier-plus). It's public, as the licence asks, and holds no one's data or passwords.
@@ -84,7 +86,7 @@ Everyone then fills in their profile, including the personal details in Profile 
 
 | To… | Type |
 |-----|------|
-| See everyone, and whether their Dossier is running | `./list.sh` |
+| See everyone, and whether their Callback is running | `./list.sh` |
 | Give someone a new password (signs them out everywhere) | `./reset-password.sh priya` |
 | Take someone offline, keeping their data | `./remove-person.sh priya` |
 | Bring them back, as they were | `./restore-person.sh priya` |
@@ -98,7 +100,7 @@ To back up every night, type `crontab -e` and add this line, with your folder:
 30 2 * * * /root/dossier-plus/friends/backup.sh >/dev/null 2>&1
 ```
 
-Backups go to `friends/backups/` and are kept for 14 days. Each Dossier also keeps its own nightly backup, which its owner can download in Settings → Your data. Copy `friends/backups/` off the server now and then, in case the server itself is lost.
+Backups go to `friends/backups/` and are kept for 14 days. Each Callback also keeps its own nightly backup, which its owner can download in Settings → Your data. Copy `friends/backups/` off the server now and then, in case the server itself is lost.
 
 ## Privacy, honestly
 
@@ -107,5 +109,5 @@ Each person's data is in their own database, under their own password and their 
 ## If something's wrong
 
 - **An address doesn't open**: check the DNS record (step 2) with `ping priya.jobs.example.com`; it should show your server's IP. The HTTPS certificate is issued on the first visit, which can take a minute.
-- **Someone's Dossier won't start**: `./list.sh` shows its state; `docker compose -f compose.yml -f people.yml --env-file .env logs app-priya` shows why.
-- **The server is slow**: `./list.sh` shows each Dossier's memory. If the total is near the server's memory, move to a bigger server.
+- **Someone's Callback won't start**: `./list.sh` shows its state; `docker compose -f compose.yml -f people.yml --env-file .env logs app-priya` shows why.
+- **The server is slow**: `./list.sh` shows each Callback's memory. If the total is near the server's memory, move to a bigger server.

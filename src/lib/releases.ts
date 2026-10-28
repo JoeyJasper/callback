@@ -1,4 +1,4 @@
-// Where Dossier's releases are published, for the update check and its
+// Where Dossier's releases (the project Callback is built on) are published, for the update check and its
 // notice (update-check.ts, the sidebar). Safe to use in the browser.
 
 export const RELEASES_REPOSITORY = "AienTech/dossier";

@@ -2,7 +2,7 @@ import "server-only";
 
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import { encryptApiKey } from "@/lib/ai/api-key";
-import { EXPORT_FORMAT, EXPORT_SCHEMA_VERSION, EXPORT_SCHEMA_VERSIONS, exportSchema, INSTALL_SETTINGS, SECRET_SETTINGS, type DossierExport } from "@/lib/data-export";
+import { EXPORT_FORMAT, EXPORT_SCHEMA_VERSION, EXPORT_SCHEMA_VERSIONS, exportSchema, INSTALL_SETTINGS, SECRET_SETTINGS, type CallbackExport } from "@/lib/data-export";
 import { encryptSecret, JOB_SOURCE_KEY } from "@/lib/secrets";
 
 // Restoring from an export file (E10-6, SET-10): everything is replaced in
@@ -12,23 +12,23 @@ import { encryptSecret, JOB_SOURCE_KEY } from "@/lib/secrets";
 export type ImportSummary = { applications: number; roles: number; skills: number; themes: number; notes: number };
 
 /** Reads an export file, or says in plain words why it can't be used. */
-export function parseExport(text: string): { ok: true; data: DossierExport } | { ok: false; error: string } {
+export function parseExport(text: string): { ok: true; data: CallbackExport } | { ok: false; error: string } {
   let json: unknown;
   try {
     json = JSON.parse(text);
   } catch {
-    return { ok: false, error: "That file isn't a Dossier export: it isn't JSON." };
+    return { ok: false, error: "That file isn't a Callback export: it isn't JSON." };
   }
   const header = json as { format?: unknown; schemaVersion?: unknown };
   if (typeof json !== "object" || json === null || header.format !== EXPORT_FORMAT) {
-    return { ok: false, error: "That file isn't a Dossier export." };
+    return { ok: false, error: "That file isn't a Callback export." };
   }
   if (typeof header.schemaVersion !== "number") return { ok: false, error: "That export has no schema version, so it can't be read." };
   if (header.schemaVersion > EXPORT_SCHEMA_VERSION) {
-    return { ok: false, error: `That export comes from a newer version of Dossier (schema ${header.schemaVersion}). Update this server first.` };
+    return { ok: false, error: `That export comes from a newer version of Callback (schema ${header.schemaVersion}). Update this server first.` };
   }
   if (!EXPORT_SCHEMA_VERSIONS.includes(header.schemaVersion)) {
-    return { ok: false, error: `That export's schema version (${header.schemaVersion}) isn't one this version of Dossier can read.` };
+    return { ok: false, error: `That export's schema version (${header.schemaVersion}) isn't one this version of Callback can read.` };
   }
   const parsed = exportSchema.safeParse(json);
   if (!parsed.success) {
@@ -39,7 +39,7 @@ export function parseExport(text: string): { ok: true; data: DossierExport } | {
 }
 
 /** What a file holds, for "replace this with that". */
-export function summarizeExport(data: DossierExport): ImportSummary {
+export function summarizeExport(data: CallbackExport): ImportSummary {
   return {
     applications: data.applications.length,
     roles: data.profile.experience.length,
@@ -76,7 +76,7 @@ const jsonList = (value: unknown) => (Array.isArray(value) ? value : []) as Pris
  * carries one, which is then encrypted with this server's secret. The
  * install's own settings (the usage ping's) stay as they are.
  */
-export async function importExport(db: PrismaClient, data: DossierExport): Promise<void> {
+export async function importExport(db: PrismaClient, data: CallbackExport): Promise<void> {
   const { profile, themes, settings, applications, postings, searches, agentCandidates, startups, startupBlocks, apiKey, jobSourceKeys } = data;
   const fromFile: Record<string, string | null> = {
     apiKeyEnc: apiKey ? encryptApiKey(apiKey) : null,

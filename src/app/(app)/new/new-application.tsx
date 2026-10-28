@@ -134,7 +134,7 @@ function useLeaveGuard(active: boolean, onLeave: () => void) {
 export type NewApplicationProps = {
   /** Whether an AI provider is set up; without one, the page points to Settings. */
   aiReady: boolean;
-  /** The Claude connector is on and Dossier has no usable AI model: a Claude chat writes it instead (#221). */
+  /** The Claude connector is on and Callback has no usable AI model: a Claude chat writes it instead (#221). */
   writeInClaude?: boolean;
   /** Offered through "Use a sample posting" before the first application. */
   samplePosting: string | null;
@@ -358,9 +358,9 @@ export function NewApplication({ aiReady, writeInClaude = false, samplePosting, 
             <>
               {writeInClaude ? (
                 <p role="note" className="rounded-card border border-line-card bg-card px-4 py-3 text-meta text-muted">
-                  Dossier has no AI model of its own, so Claude writes this one: <strong className="text-ink">Write it with Claude</strong> opens a
-                  chat in Claude that uses your Claude plan and the Dossier connector, and saves the resume and cover letter here as a Draft. To
-                  have Dossier write it instead,{" "}
+                  Callback has no AI model of its own, so Claude writes this one: <strong className="text-ink">Write it with Claude</strong> opens a
+                  chat in Claude that uses your Claude plan and the Callback connector, and saves the resume and cover letter here as a Draft. To
+                  have Callback write it instead,{" "}
                   <Link href="/settings?section=ai" className="font-medium text-ink underline underline-offset-2">
                     choose a model in Settings → AI provider
                   </Link>

@@ -10,7 +10,7 @@ import { useSidebarCollapsed } from "./sidebar-frame";
 const LABEL = "Star on GitHub";
 
 /**
- * The sidebar's link to Dossier's repository, for credits and support; on a
+ * The sidebar's link to Callback's repository, for credits and support; on a
  * changed copy run for others, to that copy's source code instead.
  */
 export function RepositoryLink({ sourceUrl = null }: { sourceUrl?: string | null }) {

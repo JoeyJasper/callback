@@ -10,7 +10,7 @@ afterEach(() => {
 
 function renderLink(initialCollapsed = false) {
   render(
-    <SidebarFrame initialCollapsed={initialCollapsed} brand={<span>Dossier</span>}>
+    <SidebarFrame initialCollapsed={initialCollapsed} brand={<span>Callback</span>}>
       <RepositoryLink />
     </SidebarFrame>,
   );
@@ -34,7 +34,7 @@ describe("RepositoryLink", () => {
 describe("RepositoryLink on a changed copy run for others", () => {
   it("links to that copy's source code (DOSSIER_SOURCE_URL)", () => {
     render(
-      <SidebarFrame initialCollapsed={false} brand={<span>Dossier</span>}>
+      <SidebarFrame initialCollapsed={false} brand={<span>Callback</span>}>
         <RepositoryLink sourceUrl="https://github.com/joel/dossier" />
       </SidebarFrame>,
     );

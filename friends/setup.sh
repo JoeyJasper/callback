@@ -23,7 +23,7 @@ if [ ! -f .env ]; then
   read -r -p "Your time zone [Asia/Dubai]: " tz
   tz="${tz:-Asia/Dubai}"
   {
-    echo "# Settings for Dossier for you and your friends. Keep this file private."
+    echo "# Settings for Callback for you and your friends. Keep this file private."
     echo "DOMAIN=$domain"
     echo "EMAIL=$email"
     echo "POSTGRES_PASSWORD=$(random_hex 24)"
@@ -32,7 +32,8 @@ if [ ! -f .env ]; then
 
   source_url="$(git -C "$REPO_DIR" remote get-url origin 2>/dev/null | sed -E 's#^git@github.com:#https://github.com/#; s#\.git$##')"
   cat > shared.env <<SHARED
-# What every person's Dossier starts with. Each person can change these in
+# What every person's Callback starts with. The settings keep the DOSSIER_
+# names of Dossier, the project Callback is built on. Each person can change these in
 # their own Settings; keys typed there are stored, encrypted, for them only.
 # After changing this file: ./update.sh
 

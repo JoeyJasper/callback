@@ -1,25 +1,25 @@
-# Dossier for you and your friends: one server, a separate Dossier and
+# Callback for you and your friends: one server, a separate Callback and
 # database for each person, each on their own web address with HTTPS.
 # Don't run this file by hand: use the scripts in this folder (README.md).
 #
 # people.yml (made by the scripts) adds one app per person; the Caddyfile
 # (also made by the scripts) sends each person's address to their app.
 
-name: dossier-friends
+name: callback-friends
 
 services:
   db:
     image: postgres:18-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: dossier
+      POSTGRES_USER: callback
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run setup.sh first}
-      POSTGRES_DB: dossier
+      POSTGRES_DB: callback
     volumes:
       # Postgres 18+ keeps data in a versioned subdirectory, so mount the parent.
       - pgdata:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dossier -d dossier"]
+      test: ["CMD-SHELL", "pg_isready -U callback -d callback"]
       interval: 5s
       timeout: 5s
       retries: 10

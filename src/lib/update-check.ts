@@ -8,7 +8,7 @@ import { appVersion } from "@/lib/version";
 import { RELEASES_REPOSITORY, type Release } from "@/lib/releases";
 
 // The update check (E10-9, SET-12, PRD §11): "Check for updates" in
-// Settings → About, and once on each day Dossier is used while "Check for
+// Settings → About, and once on each day Callback is used while "Check for
 // updates daily" is on. All it sends is a request for the project's latest
 // GitHub release. The newest release it has seen is kept in Settings, and the
 // sidebar tells the user about it while it's newer than this version.

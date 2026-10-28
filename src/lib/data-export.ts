@@ -30,7 +30,7 @@ import { decryptApiKey } from "@/lib/ai/api-key";
 import { decryptSecret, JOB_SOURCE_KEY } from "@/lib/secrets";
 import { appVersion } from "@/lib/version";
 
-// Everything a user keeps in Dossier as one JSON file (E10-4, SET-10): the
+// Everything a user keeps in Callback as one JSON file (E10-4, SET-10): the
 // profile, custom themes, settings and applications with their history,
 // documents, chat and notes, the postings kept from Find jobs (E14-9) and
 // the job agent's candidates (E16), so its dedupe survives a restore, and
@@ -356,12 +356,12 @@ export const exportSchema = z.object({
   startups: z.array(startup).default([]),
   startupBlocks: z.array(z.object({ hash: text, createdAt: date })).default([]),
 });
-export type DossierExport = z.infer<typeof exportSchema>;
+export type CallbackExport = z.infer<typeof exportSchema>;
 
-/** "dossier-export-2026-09-28.json", dated in the server's time zone. */
+/** "callback-export-2026-09-28.json", dated in the server's time zone. */
 export function exportFileName(now = new Date()): string {
   const pad = (value: number) => String(value).padStart(2, "0");
-  return `dossier-export-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.json`;
+  return `callback-export-${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}.json`;
 }
 
 /**
@@ -374,7 +374,7 @@ export function exportFileName(now = new Date()): string {
 export async function buildExport(
   db: PrismaClient,
   { includeApiKey = false, now = new Date() }: { includeApiKey?: boolean; now?: Date } = {},
-): Promise<DossierExport> {
+): Promise<CallbackExport> {
   return db.$transaction(async (tx) => {
     const [fields, skills, languages, experience, projects, education, publications, references, facts, themes, settings, applications, postings, searches, agentCandidates, startups, startupBlocks] = await Promise.all([
       tx.profileField.findMany({ select: { key: true, value: true }, orderBy: { key: "asc" } }),

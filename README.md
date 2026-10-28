@@ -2,30 +2,27 @@
   <img src="src/app/icon.svg" alt="" width="80" height="80">
 </p>
 
-<h1 align="center">Dossier</h1>
+<h1 align="center">Callback</h1>
 
 <p align="center">
-  Your job search, on your own server: one profile, a tailored resume and cover letter for every job, and every application tracked from draft to offer.
+  Apply smarter, hear back: tailored applications that get you the call back.
 </p>
 
 <p align="center">
-  <a href="https://github.com/AienTech/dossier/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/AienTech/dossier?label=release"></a>
-  <a href="https://github.com/AienTech/dossier/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/AienTech/dossier/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="License: AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-blue"></a>
-  <a href="https://github.com/AienTech/dossier/pkgs/container/dossier"><img alt="Docker image: ghcr.io/aientech/dossier" src="https://img.shields.io/badge/image-ghcr.io%2Faientech%2Fdossier-2496ED?logo=docker&logoColor=white"></a>
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs">
   <img alt="PostgreSQL 18" src="https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white">
 </p>
 
-Dossier keeps your career history in one profile and turns it into a clean resume. For every job you apply to, it reads the posting, shows how you match, and drafts a tailored resume and cover letter that only use facts from your profile. You refine them in a chat, download them as PDFs and track each application from draft to offer.
+Callback keeps your career history in one profile and, for every job you apply to, reads the posting, shows how you match with the lines of your profile that prove it, and drafts a tailored resume and cover letter that only use facts from your profile, in the format the job's country expects. It checks the resume the way an applicant tracking system will, prepares you for the interview, and learns from which applications get answers.
 
-It's for one person on a small server: one password, your data in your own PostgreSQL database, and an AI model of your choice. That can be a local model through Ollama or LM Studio, so your profile and documents stay on your own hardware, or a hosted one (any OpenAI-compatible API, Anthropic or Mistral), which then receives what it writes from. [Privacy](https://github.com/AienTech/dossier/wiki/Privacy) says what goes where.
+Callback is built on [Dossier](https://github.com/AienTech/dossier) by AienTech, changed from it in October 2026, and is free software under the same licence, the [AGPL-3.0](LICENSE). Everything Dossier does, Callback does too; what it adds is below.
 
-**Get started:** [run it on your computer](#run-it-on-your-computer) in a few minutes, or [self-host it](#self-hosting) on a server. The [installation guide](https://github.com/AienTech/dossier/wiki) covers every way: Docker with or without Compose, Node.js, a plain Ubuntu server, CapRover, Coolify and Dokploy.
+**Get started:** to run Callback for yourself and your friends on one server, follow [friends/README.md](friends/README.md).
 
-## This fork: more interviews per application
+## What Callback adds to Dossier
 
-On top of Dossier 1.9.2, this copy adds:
+On top of Dossier 1.9.2:
 
 - **Evidence matcher:** each of a posting's requirements is matched against every line of your profile (roles, projects, studies, facts), not just your skills list, with the line that proves it quoted. A gap is shown only when nothing in your profile shows it.
 - **ATS check:** a tab on each application shows which of the posting's required keywords are in your tailored resume, and test-reads the actual PDF the way an applicant tracking system does, flagging lost contact details, headings and scrambled lines, with a fix for each. Built-in themes were fixed where they failed it.
@@ -33,7 +30,11 @@ On top of Dossier 1.9.2, this copy adds:
 - **Multi-search agent:** up to five searches a run (other titles, places or countries), shared fairly.
 - **Interview prep:** a pitch, likely questions with STAR answers from your own roles, how to talk about each gap, and questions to ask.
 - **Resume formats by country:** Gulf, Indian, German, European, UK, American, Canadian and Australian formats, picked from the job's country: paper size, photo, personal details such as nationality and visa status, and India's declaration.
-- **For you and your friends:** [`friends/`](friends/README.md) runs a separate Dossier for each person on one server, each on their own address with HTTPS, added with one command.
+- **For you and your friends:** [`friends/`](friends/README.md) runs a separate Callback for each person on one server, each on their own address with HTTPS, added with one command.
+
+## About Dossier
+
+The rest of this page is Dossier's own README, kept as its authors wrote it: what it does and how to run it. Its install commands use Dossier's published image (`ghcr.io/aientech/dossier`), which doesn't have Callback's additions; to run Callback, use [friends/README.md](friends/README.md), which builds it from this repository.
 
 ## Demo
 

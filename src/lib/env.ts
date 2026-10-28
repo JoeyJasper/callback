@@ -72,7 +72,7 @@ const schema = z.object({
         error: "DOSSIER_BACKUP_RETENTION_DAYS must be at least 1.",
       }),
     ),
-  // The daily usage ping (usage-ping.ts): unset, Dossier asks after
+  // The daily usage ping (usage-ping.ts): unset, Callback asks after
   // sign-in and sends nothing before a yes; on or off answers for good.
   DOSSIER_TELEMETRY: optional(
     z
@@ -81,10 +81,10 @@ const schema = z.object({
       .toLowerCase()
       .pipe(z.enum(["on", "off"], { error: (issue) => `DOSSIER_TELEMETRY must be on or off (got "${String(issue.input)}").` })),
   ),
-  // Where this install's source code is, when it runs a changed copy of Dossier for others: the AGPL asks
+  // Where this install's source code is, when it runs a changed copy of Callback for others: the AGPL asks
   // that they're offered it. Shown in Settings → About and linked from the sidebar.
   DOSSIER_SOURCE_URL: optional(z.url({ protocol: /^https?$/, error: "DOSSIER_SOURCE_URL must be an http:// or https:// URL." })),
-  // Off: no daily check for Dossier releases, e.g. on a server whose copy is updated by whoever runs it.
+  // Off: no daily check for releases of Dossier, the project Callback is built on, e.g. on a server whose copy is updated by whoever runs it.
   DOSSIER_UPDATE_CHECK: optional(
     z
       .string()
@@ -147,7 +147,7 @@ const schema = z.object({
   // Never echo the secret.
   DOSSIER_GOOGLE_CLIENT_ID: optional(z.string().trim()),
   DOSSIER_GOOGLE_CLIENT_SECRET: optional(z.string().trim()),
-  // The address Dossier is reached at, e.g. https://dossier.example.com, for
+  // The address Callback is reached at, e.g. https://dossier.example.com, for
   // Google's redirect. Defaults to the address of the request that connects.
   DOSSIER_PUBLIC_URL: optional(
     z.url({ protocol: /^https?$/, error: "DOSSIER_PUBLIC_URL must be an http:// or https:// URL." }).transform((url) => url.replace(/\/+$/, "")),
@@ -225,7 +225,7 @@ export function checkEnvOnStartup(): void {
   } catch (error) {
     if (!(error instanceof EnvError)) throw error;
     for (const problem of error.problems) {
-      console.error(`Dossier can't start: ${problem}`);
+      console.error(`Callback can't start: ${problem}`);
     }
     process.exit(1);
   }

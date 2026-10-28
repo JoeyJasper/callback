@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Takes the newest code from your fork, rebuilds the app and restarts everyone's
-# Dossier on it. Each one brings its own database up to date as it starts.
+# Callback on it. Each one brings its own database up to date as it starts.
 # Also applies changes to shared.env.
 
 source "$(dirname "$0")/lib.sh"
@@ -13,4 +13,4 @@ docker build -t "$IMAGE" "$REPO_DIR" >/dev/null
 regenerate
 dc up -d --remove-orphans
 reload_caddy
-say "Everyone's Dossier is on the new version."
+say "Everyone's Callback is on the new version."

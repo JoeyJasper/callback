@@ -4,7 +4,7 @@ set -euo pipefail
 
 FRIENDS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$FRIENDS_DIR/.." && pwd)"
-IMAGE="dossier-friends:latest"
+IMAGE="callback-friends:latest"
 cd "$FRIENDS_DIR"
 
 say() { printf '%s\n' "$*"; }
@@ -29,7 +29,7 @@ valid_name() {
   [[ "$1" =~ ^[a-z][a-z0-9-]{1,19}$ ]] || die "Use 2–20 lower-case letters, digits or hyphens, starting with a letter (e.g. joel, priya-k)."
 }
 
-db_name() { printf 'dossier_%s' "${1//-/_}"; }
+db_name() { printf 'callback_%s' "${1//-/_}"; }
 
 people() {
   for file in people/*.env; do
@@ -50,7 +50,7 @@ random_password() {
   printf '%s' "$out"
 }
 
-# The argon2id hash Dossier signs in with, made by the image's own hash-password.
+# The argon2id hash Callback signs in with, made by the image's own hash-password.
 hash_password() {
   printf '%s\n' "$1" | docker run --rm -i "$IMAGE" hash-password 2>/dev/null | tail -n1
 }

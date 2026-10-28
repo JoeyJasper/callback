@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Everyone's address, whether their Dossier is running, and its memory use.
+# Everyone's address, whether their Callback is running, and its memory use.
 
 source "$(dirname "$0")/lib.sh"
 need_setup

@@ -67,7 +67,7 @@ async function readPassword(): Promise<string> {
 async function main() {
   try {
     const hash = await hashPassword(await readPassword());
-    process.stderr.write("Set DOSSIER_PASSWORD to this, then restart Dossier:\n");
+    process.stderr.write("Set DOSSIER_PASSWORD to this, then restart Callback:\n");
     process.stdout.write(`${hash}\n`);
   } catch (error) {
     if (!(error instanceof Cancelled)) process.stderr.write(`${(error as Error).message}\n`);

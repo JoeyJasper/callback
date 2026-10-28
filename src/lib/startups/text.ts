@@ -114,7 +114,7 @@ const LEFT_OUT = "[address left out]";
 /**
  * Text with every email address taken out, written out or hidden ("jane at
  * acme dot com", "jane [at] acme [dot] com"), for what's handed to the AI:
- * addresses stay in Dossier.
+ * addresses stay in Callback.
  */
 export function withoutAddresses(text: string): string {
   return text

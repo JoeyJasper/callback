@@ -1,14 +1,14 @@
 import { cn } from "@/lib/cn";
 
-/** Dossier's "D" mark, as in src/app/icon.svg, in the primary colours, so it turns light in the dark scheme. Decorative: put the name next to it. */
+/** Callback's "C" mark (Newsreader, weight 600, optical size 24), as in src/app/icon.svg, in the primary colours, so it turns light in the dark scheme. Decorative: put the name next to it. */
 export function BrandMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true" className={cn("size-8 shrink-0", className)}>
       <rect width="64" height="64" rx="14.08" className="fill-primary" />
       <path
         className="fill-on-primary"
-        transform="matrix(0.02844 0 0 -0.02844 10.214 51.200)"
-        d="M1179.8 691.9Q1179.8 974 1032.5 1107.7Q885.3 1241.3 625.7 1241.3H354.9L338.3 1350H674.8Q936.6 1350 1111 1279.8Q1285.4 1209.6 1372.4 1068.2Q1459.5 926.8 1459.5 714.2Q1459.5 486.8 1357.2 327.4Q1254.8 168 1077.9 84Q900.9 0 678.3 0H338.3L354.9 108.7H646.1Q807.3 108.7 927.1 168.3Q1047 227.8 1113.4 356.5Q1179.8 485.1 1179.8 691.9ZM72.3 0V41L223.4 95.9V1254.2L72.3 1308.9V1350H489.4V0Z"
+        transform="matrix(0.02844 0 0 -0.02844 11.929 51.795)"
+        d="M901.9 84.6Q969.8 84.6 1031.9 97.3Q1094 110.1 1164.5 140.9L1106.3 96.6L1277.5 390.8H1330.3L1285.3 49.9Q1199.9 15.3 1089 -4.5Q978.1 -24.2 851.2 -24.2Q674.3 -24.2 532.2 21.3Q390.1 66.9 289.3 155.3Q188.4 243.7 134.8 372Q81.2 500.4 81.2 665.8Q81.2 878 178.2 1037.6Q275.3 1197.1 455.4 1285.7Q635.4 1374.2 883.7 1374.2Q949.6 1374.2 1013.5 1366.6Q1077.3 1358.9 1164.1 1338.9L1092.9 1322.4L1224.1 1416.3H1253.4L1323.3 926.4L1269.3 914.5L1071.2 1242.3L1139.6 1169.2Q1057.6 1223.5 987.2 1244.1Q916.8 1264.7 838.8 1264.7Q723.5 1264.7 634.1 1231.6Q544.7 1198.5 483.5 1133.5Q422.3 1068.6 390.4 971.7Q358.5 874.9 358.5 746.9Q358.5 584 399.1 460.3Q439.6 336.6 513 253.1Q586.3 169.5 685.6 127.1Q784.9 84.6 901.9 84.6Z"
       />
     </svg>
   );

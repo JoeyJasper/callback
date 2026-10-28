@@ -7,7 +7,7 @@ source "$(dirname "$0")/lib.sh"
 need_setup
 [ $# -eq 1 ] || die "Usage: ./reset-password.sh <name>"
 name="$1"
-[ -f "people/$name.env" ] || die "$name doesn't have a Dossier. See ./list.sh"
+[ -f "people/$name.env" ] || die "$name doesn't have a Callback. See ./list.sh"
 
 password="$(random_password)"
 hash="$(hash_password "$password")"
