@@ -27,7 +27,7 @@ You add a person with one command. Everything below is typed into the server's t
 Your server downloads Dossier from your GitHub copy, and the licence asks that the people using your changed version can see its source code there.
 
 1. Sign in at [github.com](https://github.com) (create a free account if you don't have one).
-2. Open your copy of Dossier (the fork with these changes) and copy its address, like `https://github.com/yourname/dossier`.
+2. Your copy is [github.com/JoeyJasper/dossier-plus](https://github.com/JoeyJasper/dossier-plus). It's public, as the licence asks, and holds no one's data or passwords.
 
 ## 2. Get the server ready
 
@@ -48,8 +48,8 @@ That makes `anything.jobs.example.com` reach your server. It can take up to an h
 ## 3. Set it up
 
 ```bash
-git clone https://github.com/yourname/dossier.git
-cd dossier/friends
+git clone https://github.com/JoeyJasper/dossier-plus.git
+cd dossier-plus/friends
 ./setup.sh jobs.example.com
 ```
 
@@ -95,7 +95,7 @@ Everyone then fills in their profile, including the personal details in Profile 
 To back up every night, type `crontab -e` and add this line, with your folder:
 
 ```
-30 2 * * * /root/dossier/friends/backup.sh >/dev/null 2>&1
+30 2 * * * /root/dossier-plus/friends/backup.sh >/dev/null 2>&1
 ```
 
 Backups go to `friends/backups/` and are kept for 14 days. Each Dossier also keeps its own nightly backup, which its owner can download in Settings → Your data. Copy `friends/backups/` off the server now and then, in case the server itself is lost.
