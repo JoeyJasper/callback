@@ -5,7 +5,7 @@ exports[`ResumeDocument > renders the demo profile in Atlas 1`] = `
   aria-label="Resume"
   class="_page_fa1ef7 _centered_fa1ef7 _banner_fa1ef7 _timeline_fa1ef7"
   dir="ltr"
-  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 50; --pad-x: 54; --gap: 20; --item-gap: 10; --font-size: 10.5; --line-height: 1.5; --head-font: var(--script-fonts), var(--typeface-greek-serif), var(--typeface-libre-caslon); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-inter); --accent: #a14a1f; --name-size: 30; --name-weight: 500; --heading-size: 9.5; --heading-weight: 600; --heading-transform: uppercase; --heading-tracking: .14em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28; --on-accent: #ffffff;"
+  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 50; --pad-x: 54; --gap: 20; --item-gap: 10; --font-size: 10.5; --line-height: 1.5; --head-font: var(--script-fonts), var(--typeface-greek-serif), var(--typeface-libre-caslon); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-inter); --accent: #a14a1f; --name-size: 30; --name-weight: 500; --heading-size: 9.5; --heading-weight: 600; --heading-transform: uppercase; --heading-tracking: .07em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28; --on-accent: #ffffff;"
 >
   <header
     class="_header_fa1ef7"
@@ -1235,7 +1235,7 @@ exports[`ResumeDocument > renders the demo profile in Console 1`] = `
   aria-label="Resume"
   class="_page_fa1ef7 _split_fa1ef7 _tintedSidebar_fa1ef7 _headingBand_fa1ef7"
   dir="ltr"
-  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 38; --pad-x: 42; --gap: 14; --item-gap: 7; --font-size: 9.5; --line-height: 1.42; --head-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-jetbrains-mono); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-work-sans); --accent: #4a5563; --name-size: 25; --name-weight: 600; --heading-size: 9.5; --heading-weight: 600; --heading-transform: uppercase; --heading-tracking: .14em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28;"
+  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 38; --pad-x: 42; --gap: 14; --item-gap: 7; --font-size: 9.5; --line-height: 1.42; --head-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-jetbrains-mono); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-work-sans); --accent: #4a5563; --name-size: 25; --name-weight: 600; --heading-size: 9.5; --heading-weight: 600; --heading-transform: uppercase; --heading-tracking: .07em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28;"
 >
   <header
     class="_header_fa1ef7"
@@ -2905,7 +2905,7 @@ exports[`ResumeDocument > renders the demo profile in Minimal 1`] = `
   aria-label="Resume"
   class="_page_fa1ef7"
   dir="ltr"
-  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 62; --pad-x: 64; --gap: 26; --item-gap: 13; --font-size: 10.5; --line-height: 1.65; --head-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-plex-sans); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-plex-sans); --accent: #6f6a62; --name-size: 25; --name-weight: 600; --heading-size: 9.5; --heading-weight: 600; --heading-transform: uppercase; --heading-tracking: .14em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28;"
+  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 62; --pad-x: 64; --gap: 26; --item-gap: 13; --font-size: 10.5; --line-height: 1.65; --head-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-plex-sans); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-plex-sans); --accent: #6f6a62; --name-size: 25; --name-weight: 600; --heading-size: 9.5; --heading-weight: 600; --heading-transform: uppercase; --heading-tracking: .07em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28;"
 >
   <header
     class="_header_fa1ef7"
@@ -3315,7 +3315,7 @@ exports[`ResumeDocument > renders the demo profile in Modern 1`] = `
   aria-label="Resume"
   class="_page_fa1ef7 _split_fa1ef7"
   dir="ltr"
-  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 50; --pad-x: 54; --gap: 20; --item-gap: 10; --font-size: 10.5; --line-height: 1.5; --head-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-geist); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-geist); --accent: #2f5d8a; --name-size: 25; --name-weight: 600; --heading-size: 9.5; --heading-weight: 600; --heading-transform: uppercase; --heading-tracking: .14em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28;"
+  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 50; --pad-x: 54; --gap: 20; --item-gap: 10; --font-size: 10.5; --line-height: 1.5; --head-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-geist); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-geist); --accent: #2f5d8a; --name-size: 25; --name-weight: 600; --heading-size: 9.5; --heading-weight: 600; --heading-transform: uppercase; --heading-tracking: .07em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28;"
 >
   <header
     class="_header_fa1ef7"
@@ -3740,7 +3740,7 @@ exports[`ResumeDocument > renders the demo profile in Signal 1`] = `
   aria-label="Resume"
   class="_page_fa1ef7 _banner_fa1ef7 _headingBar_fa1ef7"
   dir="ltr"
-  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 50; --pad-x: 54; --gap: 20; --item-gap: 10; --font-size: 10.5; --line-height: 1.5; --head-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-manrope); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-manrope); --accent: #1f3a5f; --name-size: 25; --name-weight: 600; --heading-size: 9.5; --heading-weight: 700; --heading-transform: uppercase; --heading-tracking: .14em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28; --on-accent: #ffffff;"
+  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 50; --pad-x: 54; --gap: 20; --item-gap: 10; --font-size: 10.5; --line-height: 1.5; --head-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-manrope); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-manrope); --accent: #1f3a5f; --name-size: 25; --name-weight: 600; --heading-size: 9.5; --heading-weight: 700; --heading-transform: uppercase; --heading-tracking: .07em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28; --on-accent: #ffffff;"
 >
   <header
     class="_header_fa1ef7"
@@ -4150,7 +4150,7 @@ exports[`ResumeDocument > renders the demo profile in Studio 1`] = `
   aria-label="Resume"
   class="_page_fa1ef7 _split_fa1ef7 _sidebarEnd_fa1ef7 _tintedSidebar_fa1ef7"
   dir="ltr"
-  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 50; --pad-x: 54; --gap: 20; --item-gap: 10; --font-size: 10.5; --line-height: 1.5; --head-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-space-grotesk); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-inter); --accent: #1f6f6b; --name-size: 25; --name-weight: 600; --heading-size: 9.5; --heading-weight: 600; --heading-transform: uppercase; --heading-tracking: .14em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28;"
+  style="--page-height: 905; --paper-width: 210; --paper-height: 297; --pad-y: 50; --pad-x: 54; --gap: 20; --item-gap: 10; --font-size: 10.5; --line-height: 1.5; --head-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-space-grotesk); --body-font: var(--script-fonts), var(--typeface-greek-sans), var(--typeface-inter); --accent: #1f6f6b; --name-size: 25; --name-weight: 600; --heading-size: 9.5; --heading-weight: 600; --heading-transform: uppercase; --heading-tracking: .07em; --heading-rule: 0; --heading-padding: 0; --sidebar-width: 150; --sidebar-gap: 28;"
 >
   <header
     class="_header_fa1ef7"

@@ -3,8 +3,11 @@ import { z } from "zod";
 import { matchSchema, type Evidence, type Extracted, type Match } from "@/lib/application-data";
 import { citationText } from "@/lib/citation";
 import { experienceMonths, factTexts, formatMonthYear, languageLevelLabel, resumePublications, sameName, type ProfileData } from "@/lib/profile";
+import { mentions } from "@/lib/terms";
 
 import { system, UNTRUSTED_POSTING, type Task } from "./prompt-parts";
+
+export { mentions };
 
 export const MATCH_REQUIREMENTS_VERSION = "match-requirements@2";
 
@@ -124,30 +127,6 @@ type Mapped = z.infer<typeof answerSchema>["matches"][number];
 function citedLines(mapped: Mapped | undefined, lines: ProfileLine[]): ProfileLine[] {
   const numbers = [...new Set(mapped?.evidence ?? [])].filter((number) => number >= 0 && number < lines.length);
   return numbers.map((number) => lines[number]);
-}
-
-/** Words as compared: lowercased, accents and punctuation folded. */
-function words(text: string): string[] {
-  return text
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/\p{M}/gu, "")
-    .replace(/[^\p{L}\p{N}+#]+/gu, " ")
-    .trim()
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => (word.length > 3 && word.endsWith("s") ? word.slice(0, -1) : word));
-}
-
-/** Whether `phrase` appears in `text` as whole words, forgiving case, punctuation and a plural. */
-export function mentions(text: string, phrase: string): boolean {
-  const needle = words(phrase);
-  if (needle.length === 0) return false;
-  const haystack = words(text);
-  for (let start = 0; start + needle.length <= haystack.length; start++) {
-    if (needle.every((word, offset) => haystack[start + offset] === word)) return true;
-  }
-  return false;
 }
 
 /** Lines that name the requirement's skill or keywords outright, found without the model. */

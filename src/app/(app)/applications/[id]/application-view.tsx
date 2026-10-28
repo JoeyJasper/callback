@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Switch } from "radix-ui";
-import { useEffect, useId, useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useOptimistic, useRef, useState, useTransition, type ReactNode } from "react";
 
 import { plainUnit, type UnitRenderer } from "@/components/documents/document-page";
 import { DocumentPreview } from "@/components/documents/document-preview";
@@ -53,6 +53,7 @@ import {
 } from "./actions";
 import { ApplicationHeader } from "./application-header";
 import { ApplicationMenu } from "./application-menu";
+import { AtsTab, resumeCoverage } from "./ats-tab";
 import { ConversationTab } from "./conversation-tab";
 import { EmailTab, type Attachments } from "./email-tab";
 import type { GmailSender } from "./send-with-gmail";
@@ -233,7 +234,7 @@ export function ApplicationView({
 
   /** The document on screen, which a chat message without a target is most likely about. */
   const onScreen = (): DocumentKind | null =>
-    tab === "resume" ? DocumentKind.RESUME : tab === "letter" ? DocumentKind.COVER_LETTER : tab === "email" && email ? DocumentKind.EMAIL : null;
+    tab === "resume" || tab === "ats" ? DocumentKind.RESUME : tab === "letter" ? DocumentKind.COVER_LETTER : tab === "email" && email ? DocumentKind.EMAIL : null;
 
   const selectTab = (value: string) => {
     const next = value as Tab;
@@ -359,9 +360,10 @@ export function ApplicationView({
   };
 
   /** Sends a chat message (E8-5); resolves to whether it went. */
-  const send = (text: string) =>
+  /** Sends a message about what's on screen, or about `about` when given (the ATS tab asks about the resume). */
+  const send = (text: string, about?: DocumentKind) =>
     new Promise<boolean>((resolve) => {
-      const viewing = onScreen();
+      const viewing = about ?? onScreen();
       if ((viewing || target) && !aiReady) {
         needsAi();
         return resolve(false);
@@ -540,6 +542,14 @@ export function ApplicationView({
     };
 
   const resumeUnits = resume && shown(DocumentKind.RESUME, resume.units);
+  // The ATS check's keyword coverage, as the resume stands (it updates with every edit).
+  const coverage = useMemo(
+    () =>
+      resumeUnits
+        ? resumeCoverage({ profile, units: resumeUnits, language: application.language, includeReferences, showPhoto: photoChoice, requirements, match })
+        : null,
+    [resumeUnits, profile, application.language, includeReferences, photoChoice, requirements, match],
+  );
   // Every part of the letter, those it doesn't store yet as they've always been drawn (E8-11).
   const letterUnits =
     letter &&
@@ -653,6 +663,7 @@ export function ApplicationView({
             </TabsTrigger>
           )}
           <TabsTrigger value="posting">{score ? `Job posting · ${score.hit}/${score.total} match` : "Job posting"}</TabsTrigger>
+          {coverage && <TabsTrigger value="ats">{coverage.score === null ? "ATS check" : `ATS check · ${coverage.score}%`}</TabsTrigger>}
           <TabsTrigger value="notes">{notes > 0 ? `Notes · ${notes}` : "Notes"}</TabsTrigger>
         </TabsList>
       </ApplicationHeader>
@@ -756,6 +767,23 @@ export function ApplicationView({
             facts={facts}
             setFacts={setFacts}
           />
+        </TabsContent>
+
+        <TabsContent value="ats" className="flex min-h-0 min-w-0 flex-[999_1_480px]">
+          {coverage && resumeUnits ? (
+            <AtsTab
+              applicationId={application.id}
+              coverage={coverage}
+              aiReady={aiReady}
+              unitsKey={JSON.stringify(resumeUnits)}
+              onAskToAdd={(request) => {
+                selectTab("resume");
+                void send(request, DocumentKind.RESUME);
+              }}
+            />
+          ) : (
+            <MissingDocument>This application has no tailored resume.</MissingDocument>
+          )}
         </TabsContent>
 
         <TabsContent value="notes" className="flex min-h-0 min-w-0 flex-[999_1_480px]">

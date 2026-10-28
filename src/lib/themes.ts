@@ -166,10 +166,10 @@ export const HEADING_STYLES: Record<
   }
 > = {
   [HeadingStyle.RULE]: { label: "Underlined", size: 12, weight: 600, uppercase: false, tracking: "0", rule: true, padding: 3 },
-  [HeadingStyle.CAPS]: { label: "Small caps", size: 9.5, weight: 600, uppercase: true, tracking: ".14em", rule: false, padding: 0 },
+  [HeadingStyle.CAPS]: { label: "Small caps", size: 9.5, weight: 600, uppercase: true, tracking: ".07em", rule: false, padding: 0 },
   [HeadingStyle.PLAIN]: { label: "Plain", size: 15, weight: 500, uppercase: false, tracking: "-.005em", rule: false, padding: 0 },
-  [HeadingStyle.BAR]: { label: "Accent bar", size: 9.5, weight: 700, uppercase: true, tracking: ".14em", rule: false, padding: 0, marker: "bar" },
-  [HeadingStyle.BAND]: { label: "Tinted band", size: 9.5, weight: 600, uppercase: true, tracking: ".14em", rule: false, padding: 0, marker: "band" },
+  [HeadingStyle.BAR]: { label: "Accent bar", size: 9.5, weight: 700, uppercase: true, tracking: ".07em", rule: false, padding: 0, marker: "bar" },
+  [HeadingStyle.BAND]: { label: "Tinted band", size: 9.5, weight: 600, uppercase: true, tracking: ".07em", rule: false, padding: 0, marker: "band" },
 };
 
 /** Spacing: page padding, gaps between sections and items, body text size and line height. */

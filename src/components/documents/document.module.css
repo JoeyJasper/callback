@@ -34,6 +34,11 @@
   text-align: start;
   overflow-wrap: break-word;
   print-color-adjust: exact;
+  /* Joined letters ("tt", "fi") and alternate glyphs come out of a PDF as
+     symbols an applicant tracking system can't read ("Ro?erdam"), so a
+     document draws every character on its own (the ATS check). */
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "calt" 0;
 }
 
 .page:lang(ja) {

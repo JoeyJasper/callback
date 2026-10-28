@@ -146,10 +146,10 @@ beforeEach(() => {
 const summary = demoResumeUnits()[0];
 
 describe("the document tabs (E8-2)", () => {
-  it("has Resume, Cover letter, Email and the posting with its match", () => {
+  it("has Resume, Cover letter, Email, the posting with its match and the ATS check", () => {
     render(<ApplicationView {...props} />);
     const tabs = within(screen.getByRole("tablist", { name: "Application" })).getAllByRole("tab");
-    expect(tabs.map((tab) => tab.textContent)).toEqual(["Resume", "Cover letter", "Email", "Job posting · 5/7 match", "Notes"]);
+    expect(tabs.map((tab) => tab.textContent)).toEqual(["Resume", "Cover letter", "Email", "Job posting · 5/7 match", "ATS check", "Notes"]);
     expect(screen.getByRole("tab", { name: "Resume" })).toHaveAttribute("aria-selected", "true");
   });
 
@@ -533,6 +533,17 @@ describe("the Refine with AI panel (E8-5)", () => {
     await user.click(screen.getByRole("button", { name: "Make the summary shorter" }));
     expect(sendMessage).toHaveBeenCalledWith({ id: "app-1", text: "Make the summary shorter", viewing: "RESUME", target: null });
     expect(within(panel()).getByText("Thinking…")).toBeInTheDocument();
+  });
+
+  it("sends the ATS tab's request about the resume, and shows the resume", async () => {
+    const user = userEvent.setup();
+    const requirements = [{ text: "Stakeholder management", kind: "skill" as const, skill: "Stakeholder management", years: null, language: null }];
+    const match = { items: [{ requirement: "Stakeholder management", result: "covered" as const, skill: null, experienceIds: [], note: null }] };
+    render(<ApplicationView {...props} requirements={requirements} match={match} initialTab="ats" />);
+    expect(screen.getByRole("tab", { name: "ATS check · 0%" })).toHaveAttribute("aria-selected", "true");
+    await user.click(screen.getByRole("button", { name: "Ask AI to work it in" }));
+    expect(sendMessage).toHaveBeenCalledWith({ id: "app-1", text: expect.stringMatching(/^Use the posting's exact words/), viewing: "RESUME", target: null });
+    expect(screen.getByRole("tab", { name: "Resume" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("sends with Enter and starts a new line with Shift+Enter", async () => {
