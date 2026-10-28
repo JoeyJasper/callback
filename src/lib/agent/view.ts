@@ -3,6 +3,8 @@ import "server-only";
 import { AgentCandidateStatus, JobStatus } from "@/generated/prisma/enums";
 import { formatDateTime } from "@/lib/dates";
 import { loadJobSearchConfig } from "@/lib/job-search/config";
+import { roleBoost } from "@/lib/outcomes";
+import { loadOutcomeRows } from "@/lib/outcomes-data";
 import { countryName } from "@/lib/job-search/countries";
 import { describeSearch, postedAgo, type JobSource } from "@/lib/job-search/search";
 import { SOURCE_INFO } from "@/lib/job-search/sources";
@@ -29,6 +31,9 @@ export type AgentCandidateView = {
   source: JobSource;
   url: string;
   score: number;
+  /** Points the user's own outcomes add or take off for ranking (outcome learning), and why. */
+  boost: number;
+  boostReason: string | null;
   reasons: string[];
   redFlags: string[];
   /** Why the last try at a draft failed. */
@@ -59,7 +64,9 @@ export type AgentView = {
   /** A run queued or running, to follow. */
   runJobId: string | null;
   drafts: AgentCandidateView[];
-  /** At or above the minimum score, best first. */
+  /** Whether past outcomes reorder the postings. */
+  learning: boolean;
+  /** At or above the minimum score, best first (score plus boost when learning). */
   scored: AgentCandidateView[];
   /** Below it: kept so they don't come back, shown on request. */
   belowMinimum: AgentCandidateView[];
@@ -85,7 +92,7 @@ const sectionOf = (problem: string): AgentView["setupSection"] =>
   problem.includes("AI provider") ? "ai" : problem.includes("Job search") ? "jobs" : "agent";
 
 export async function loadAgentView(now = new Date()): Promise<AgentView> {
-  const [settings, config, timeZone, candidates, draftJobs, runJobs] = await Promise.all([
+  const [settings, config, timeZone, candidates, draftJobs, runJobs, outcomes] = await Promise.all([
     loadSettings(),
     loadJobSearchConfig(),
     lastKnownTimeZone(),
@@ -98,7 +105,9 @@ export async function loadAgentView(now = new Date()): Promise<AgentView> {
       select: { id: true, key: true },
     }),
     prisma.job.findMany({ where: { key: AGENT_JOB_KEY, status: { in: [JobStatus.QUEUED, JobStatus.RUNNING] } }, select: { id: true }, take: 1 }),
+    loadOutcomeRows({ now }),
   ]);
+  const boostOf = (title: string) => (settings.agentLearn ? roleBoost(title, outcomes) : { points: 0, reason: null });
   const draftJob = new Map(draftJobs.map((job) => [job.key?.replace(/^agent-candidate:/, ""), job.id]));
 
   const query = settings.agentQuery;
@@ -108,7 +117,9 @@ export async function loadAgentView(now = new Date()): Promise<AgentView> {
     : null;
   const setupProblem = await agentSetupProblem(query);
 
-  const view = (candidate: (typeof candidates)[number]): AgentCandidateView => ({
+  const view = (candidate: (typeof candidates)[number]): AgentCandidateView => {
+    const boost = boostOf(candidate.title);
+    return {
     id: candidate.id,
     title: candidate.title.trim() || "Untitled posting",
     company: candidate.company.trim(),
@@ -122,12 +133,15 @@ export async function loadAgentView(now = new Date()): Promise<AgentView> {
     source: candidate.source,
     url: candidate.url,
     score: candidate.score,
+    boost: boost.points,
+    boostReason: boost.reason,
     reasons: stringsOf(candidate.reasons),
     redFlags: stringsOf(candidate.redFlags),
     error: candidate.error,
     applicationId: candidate.applicationId,
     draftJobId: draftJob.get(candidate.id) ?? null,
-  });
+    };
+  };
   const drafts = candidates.filter((candidate) => candidate.status === AgentCandidateStatus.DRAFTED && candidate.applicationId).map(view);
   const waiting = candidates.filter((candidate) => candidate.status !== AgentCandidateStatus.DRAFTED);
   const last = settings.agentRuns[0];
@@ -146,7 +160,12 @@ export async function loadAgentView(now = new Date()): Promise<AgentView> {
     nextRun: settings.agentEnabled ? formatDateTime(nextAgentRun(now, settings.agentHour, timeZone, settings.agentRuns), timeZone, now) : null,
     runJobId: runJobs[0]?.id ?? null,
     drafts,
-    scored: waiting.filter((candidate) => candidate.score >= settings.agentMinScore).map(view),
+    learning: settings.agentLearn,
+    // The minimum is on the score itself; what has worked before only reorders what passed it.
+    scored: waiting
+      .filter((candidate) => candidate.score >= settings.agentMinScore)
+      .map(view)
+      .toSorted((a, b) => b.score + b.boost - (a.score + a.boost)),
     belowMinimum: waiting.filter((candidate) => candidate.score < settings.agentMinScore).map(view),
   };
 }

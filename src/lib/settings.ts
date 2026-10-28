@@ -169,6 +169,8 @@ export const settingsSchema = z.object({
   agentMaxDrafts: z.coerce.number().int().min(0).max(10).catch(3),
   /** Whether a run prepares drafts for its best postings, or only scores them (off by default, #197). */
   agentAutoDraft: flag(false),
+  /** Whether what happened to past applications reorders the agent's postings (outcome learning). */
+  agentLearn: flag(true),
   /** The latest runs, newest first. They belong to the install: exports leave them out (INSTALL_SETTINGS). */
   agentRuns: json(z.array(agentRunSchema)).catch([]),
   // Startups (#222): when the screen was last opened, since the daily refresh

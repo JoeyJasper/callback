@@ -1,7 +1,8 @@
-import type { Match, Requirement } from "@/lib/application-data";
+import type { Match, Requirement, Unit } from "@/lib/application-data";
 import { citationText } from "@/lib/citation";
-import type { DocumentLabels } from "@/lib/document-labels";
-import type { ResumeContent } from "@/lib/resume-content";
+import { documentLabels, type DocumentLabels } from "@/lib/document-labels";
+import type { ProfileData } from "@/lib/profile";
+import { resumeContent, type ResumeContent } from "@/lib/resume-content";
 import { indexOfWords, mentions, words } from "@/lib/terms";
 
 // The ATS check: what an applicant tracking system would find in a tailored
@@ -57,6 +58,28 @@ export type Coverage = {
   addable: number;
   items: TermCheck[];
 };
+
+/** The keyword coverage of a tailored resume as it stands, for the tab and its label. */
+export function resumeCoverage({
+  profile,
+  units,
+  language,
+  includeReferences,
+  showPhoto,
+  requirements,
+  match,
+}: {
+  profile: ProfileData;
+  units: Unit[];
+  language: string;
+  includeReferences: boolean;
+  showPhoto: boolean | null;
+  requirements: Requirement[];
+  match: Match | null;
+}): Coverage {
+  const content = resumeContent(profile, { units, includeReferences, showPhoto }, documentLabels(language));
+  return keywordCoverage(resumeText(content), requirements, match);
+}
 
 /** The words an ATS would search for this requirement: the posting's own, else the skill or language it names. */
 export function searchTerms(requirement: Requirement): string[] {

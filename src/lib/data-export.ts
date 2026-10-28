@@ -214,6 +214,10 @@ const application = z.object({
   origin: z.enum(ApplicationOrigin).optional(),
   agentScore: int.nullable().optional(),
   awaitingReview: z.boolean().optional(),
+  /** The resume's format by country and the interview prep pack; absent in older files. */
+  resumeFormat: text.nullable().optional(),
+  interviewPrep: z.unknown().nullable().optional(),
+  interviewPrepWith: text.nullable().optional(),
   archivedAt: optionalDate,
   createdAt: date,
   updatedAt: date,

@@ -5,36 +5,12 @@ import { useId, useState, useTransition } from "react";
 import { ScoreBadge } from "@/components/score-badge";
 import { toast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
-import type { Match, Requirement, Unit } from "@/lib/application-data";
-import { keywordCoverage, resumeText, type Coverage, type ParseResult, type TermCheck } from "@/lib/ats";
+import { type Coverage, type ParseResult, type TermCheck } from "@/lib/ats";
 import { cn } from "@/lib/cn";
-import { documentLabels } from "@/lib/document-labels";
-import type { ProfileData } from "@/lib/profile";
-import { resumeContent } from "@/lib/resume-content";
 
 import { testReadResume } from "./ats-actions";
 
-/** The keyword coverage of a tailored resume as it stands, for the tab and its label. */
-export function resumeCoverage({
-  profile,
-  units,
-  language,
-  includeReferences,
-  showPhoto,
-  requirements,
-  match,
-}: {
-  profile: ProfileData;
-  units: Unit[];
-  language: string;
-  includeReferences: boolean;
-  showPhoto: boolean | null;
-  requirements: Requirement[];
-  match: Match | null;
-}): Coverage {
-  const content = resumeContent(profile, { units, includeReferences, showPhoto }, documentLabels(language));
-  return keywordCoverage(resumeText(content), requirements, match);
-}
+export { resumeCoverage } from "@/lib/ats";
 
 /** What to ask the AI so the resume uses the posting's words where the profile already shows them. */
 export function addTermsRequest(items: TermCheck[]): string {

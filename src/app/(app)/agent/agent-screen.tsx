@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useJob } from "@/hooks/use-job";
 import type { AgentCandidateView, AgentView } from "@/lib/agent/view";
+import { cn } from "@/lib/cn";
 
 import { approveAgentDraft, dismissAgentCandidate, prepareAgentDraft, restoreAgentCandidate, runAgentNow } from "./actions";
 
@@ -300,6 +301,13 @@ function CandidateCard({ candidate, children }: { candidate: AgentCandidateView;
             <li key={index}>{reason}</li>
           ))}
         </ul>
+      )}
+      {candidate.boostReason && (
+        // Outcome learning: what the user's own applications say about roles like this.
+        <p className={cn("text-meta", candidate.boost > 0 ? "text-ink" : "text-muted")}>
+          {candidate.boost > 0 ? "↑ Ranked higher: " : "↓ Ranked lower: "}
+          {candidate.boostReason}.
+        </p>
       )}
       {candidate.redFlags.length > 0 && (
         <div className="rounded-card bg-warning-surface px-3.5 py-2.5 text-meta text-warning">

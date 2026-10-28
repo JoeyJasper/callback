@@ -30,6 +30,7 @@ export const saveAgentSettings = action(
     maxScores: z.number().int().min(1).max(30).optional(),
     maxDrafts: z.number().int().min(0).max(10).optional(),
     autoDraft: z.boolean().optional(),
+    learn: z.boolean().optional(),
   }),
   async (changes) => {
     const settings = await loadSettings();
@@ -45,8 +46,10 @@ export const saveAgentSettings = action(
       agentMaxScores: changes.maxScores,
       agentMaxDrafts: changes.maxDrafts,
       agentAutoDraft: changes.autoDraft,
+      agentLearn: changes.learn,
     });
     revalidatePath("/agent");
+    revalidatePath("/insights");
     return null;
   },
 );

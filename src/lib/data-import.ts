@@ -142,6 +142,7 @@ export async function importExport(db: PrismaClient, data: DossierExport): Promi
           ...omit(application, "events", "documents", "messages", "notes", "facts", "userNote"),
           extracted: json(application.extracted),
           match: json(application.match),
+          interviewPrep: json(application.interviewPrep ?? null),
         })),
       });
       await tx.statusEvent.createMany({

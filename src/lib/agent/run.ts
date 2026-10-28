@@ -15,6 +15,8 @@ import { JobSearchError } from "@/lib/job-search/errors";
 import { postingKey, postingText, type FoundPosting, type SearchQuery } from "@/lib/job-search/search";
 import { startJob, type JobContext } from "@/lib/jobs/runner";
 import { logServerError } from "@/lib/log";
+import { roleBoost } from "@/lib/outcomes";
+import { loadOutcomeRows } from "@/lib/outcomes-data";
 import { saveScore } from "@/lib/posting-scores";
 import { postingStates } from "@/lib/postings";
 import { prisma } from "@/lib/prisma";
@@ -160,12 +162,15 @@ export async function runAgentScan({ manual }: { manual: boolean }, context: Job
   // Auto-draft (#197, off by default): the best of this run's, one job each.
   let drafted = 0;
   if (settings.agentAutoDraft && settings.agentMaxDrafts > 0 && !context.signal.aborted) {
-    const best = await prisma.agentCandidate.findMany({
+    const passed = await prisma.agentCandidate.findMany({
       where: { id: { in: kept }, status: AgentCandidateStatus.SCORED, score: { gte: settings.agentMinScore } },
       orderBy: { score: "desc" },
-      take: settings.agentMaxDrafts,
-      select: { id: true },
+      select: { id: true, score: true, title: true },
     });
+    // Outcome learning: the kinds of role that got answers before go first.
+    const outcomes = settings.agentLearn ? await loadOutcomeRows({ now }) : [];
+    const ranked = (candidate: (typeof passed)[number]) => candidate.score + (settings.agentLearn ? roleBoost(candidate.title, outcomes).points : 0);
+    const best = passed.toSorted((a, b) => ranked(b) - ranked(a)).slice(0, settings.agentMaxDrafts);
     for (const { id } of best) await startJob(agentDraftJob, { candidateId: id }, { key: draftJobKey(id) });
     drafted = best.length;
   }

@@ -34,6 +34,34 @@ beforeEach(async () => {
 afterAll(() => prisma().$disconnect());
 
 describe("the Agent screen's data (E16-6)", () => {
+  it("ranks postings for kinds of role that got answers above higher scores, and says why (outcome learning)", async () => {
+    const sent = new Date("2026-09-01T00:00:00Z");
+    const history = [
+      ...Array.from({ length: 4 }, () => ({ role: "Senior Data Scientist", furthestStage: "INTERVIEW" as const, status: "INTERVIEW" as const })),
+      ...Array.from({ length: 6 }, () => ({ role: "Data Engineer", furthestStage: "SENT" as const, status: "SENT" as const })),
+    ];
+    for (const entry of history) await prisma().application.create({ data: { ...entry, sentAt: sent } });
+    await candidate("engineer", 86, { title: "Data Engineer" });
+    await candidate("scientist", 80, { title: "Data Scientist (m/w/d)" });
+
+    const view = await loadAgentView(now);
+    expect(view.learning).toBe(true);
+    expect(view.scored.map((entry) => [entry.title, entry.score, entry.boost])).toEqual([
+      ["Data Scientist (m/w/d)", 80, 10],
+      ["Data Engineer", 86, -9],
+    ]);
+    expect(view.scored[0].boostReason).toBe("Data scientist roles have been answered 4 out of 4 times for you");
+    expect(view.scored[1].boostReason).toBe("Data engineer roles haven't been answered in 6 tries");
+
+    // Turned off, the score alone decides.
+    await saveSettings({ agentLearn: false });
+    const plain = await loadAgentView(now);
+    expect(plain.scored.map((entry) => [entry.title, entry.boost, entry.boostReason])).toEqual([
+      ["Data Engineer", 0, null],
+      ["Data Scientist (m/w/d)", 0, null],
+    ]);
+  });
+
   it("splits the queue into drafts, scored postings and those below the minimum, best first", async () => {
     const application = await prisma().application.create({ data: { origin: "AGENT", awaitingReview: true } });
     await candidate("draft", 90, { status: "DRAFTED", applicationId: application.id });

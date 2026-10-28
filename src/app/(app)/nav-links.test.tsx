@@ -33,6 +33,7 @@ describe("NavLinks", () => {
       "Agent",
       "Applications",
       "Inbox",
+      "Insights",
       "Settings",
     ]);
   });

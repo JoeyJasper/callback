@@ -423,6 +423,12 @@ model Application {
   tone                Tone              @default(WARM)
   /// The language the documents were written in, e.g. "English".
   language            String            @default("")
+  /// The resume's format by country (resumeFormats in src/lib/resume-formats.ts), e.g. "GULF"; null is the theme as it is.
+  resumeFormat        String?
+  /// The interview prep pack (interviewPrepSchema), once it's been written.
+  interviewPrep       Json?
+  /// The prompt version that wrote `interviewPrep`.
+  interviewPrepWith   String?
   /// The tailored resume follows its theme's layout, sidebar included; off
   /// means a single column (APP-4, decided in E5-1 #42).
   followThemeLayout   Boolean           @default(false)
