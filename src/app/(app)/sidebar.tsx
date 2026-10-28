@@ -30,6 +30,7 @@ export function Sidebar({
   collapsed,
   colorScheme,
   counts,
+  sourceUrl = null,
 }: {
   userName: string;
   update: Release | null;
@@ -40,6 +41,8 @@ export function Sidebar({
   colorScheme?: ColorScheme;
   /** Badges by nav item, e.g. replies waiting in the inbox. */
   counts?: Record<string, number>;
+  /** DOSSIER_SOURCE_URL: the source of a changed copy run for others, linked instead of the project's. */
+  sourceUrl?: string | null;
 }) {
   return (
     <SidebarFrame
@@ -77,7 +80,7 @@ export function Sidebar({
 
       <div className="flex flex-col gap-0.5 border-t border-line p-2 group-data-collapsed/sidebar:px-1">
         <ThemeToggle serverScheme={colorScheme} />
-        <RepositoryLink />
+        <RepositoryLink sourceUrl={sourceUrl} />
       </div>
 
       <div className="flex items-center gap-2 border-t border-line px-4 py-3 group-data-collapsed/sidebar:flex-col group-data-collapsed/sidebar:px-1">

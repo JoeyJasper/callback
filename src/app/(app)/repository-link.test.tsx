@@ -30,3 +30,14 @@ describe("RepositoryLink", () => {
     expect(renderLink(true)).toHaveAttribute("title", "Star on GitHub");
   });
 });
+
+describe("RepositoryLink on a changed copy run for others", () => {
+  it("links to that copy's source code (DOSSIER_SOURCE_URL)", () => {
+    render(
+      <SidebarFrame initialCollapsed={false} brand={<span>Dossier</span>}>
+        <RepositoryLink sourceUrl="https://github.com/joel/dossier" />
+      </SidebarFrame>,
+    );
+    expect(screen.getByRole("link", { name: "Source code (opens in a new tab)" })).toHaveAttribute("href", "https://github.com/joel/dossier");
+  });
+});

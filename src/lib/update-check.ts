@@ -85,7 +85,7 @@ export function updateNotice(
 
 /** Production servers check daily while the setting is on; development servers and tests never do. */
 export function dailyCheckRuns(): boolean {
-  return process.env.NODE_ENV === "production";
+  return process.env.NODE_ENV === "production" && env.DOSSIER_UPDATE_CHECK !== "off";
 }
 
 /** The calendar day in UTC: "2026-10-18". */

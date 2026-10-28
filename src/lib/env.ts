@@ -81,6 +81,17 @@ const schema = z.object({
       .toLowerCase()
       .pipe(z.enum(["on", "off"], { error: (issue) => `DOSSIER_TELEMETRY must be on or off (got "${String(issue.input)}").` })),
   ),
+  // Where this install's source code is, when it runs a changed copy of Dossier for others: the AGPL asks
+  // that they're offered it. Shown in Settings → About and linked from the sidebar.
+  DOSSIER_SOURCE_URL: optional(z.url({ protocol: /^https?$/, error: "DOSSIER_SOURCE_URL must be an http:// or https:// URL." })),
+  // Off: no daily check for Dossier releases, e.g. on a server whose copy is updated by whoever runs it.
+  DOSSIER_UPDATE_CHECK: optional(
+    z
+      .string()
+      .trim()
+      .toLowerCase()
+      .pipe(z.enum(["on", "off"], { error: (issue) => `DOSSIER_UPDATE_CHECK must be on or off (got "${String(issue.input)}").` })),
+  ),
   DOSSIER_AI_PROVIDER: optional(
     z.enum(AI_PROVIDERS, {
       error: (issue) =>

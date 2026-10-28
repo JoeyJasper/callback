@@ -210,6 +210,8 @@ async function aboutFacts(): Promise<AboutFacts> {
     { label: "Sign-in", value: "set via DOSSIER_PASSWORD" },
     { label: "AI", value: [providerOption(ai.provider).name, ai.model].filter(Boolean).join(" · ") },
     { label: "Applications", value: String(applications) },
+    // A changed copy run for others offers its source (AGPL §13).
+    ...(env.DOSSIER_SOURCE_URL ? [{ label: "Source code", value: env.DOSSIER_SOURCE_URL }] : []),
   ];
 }
 
