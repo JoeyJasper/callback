@@ -160,6 +160,8 @@ export const settingsSchema = z.object({
   agentEnabled: flag(false),
   /** The search it runs, as Find jobs asks it; it needs keywords and a country to run. */
   agentQuery: json(searchQuerySchema).catch(EMPTY_QUERY),
+  /** More searches each run, after agentQuery: other titles, places or countries (the multi-search agent). */
+  agentMoreQueries: json(z.array(searchQuerySchema).max(4)).catch([]),
   /** The hour of the day it runs, in the user's time zone. */
   agentHour: z.coerce.number().int().min(0).max(23).catch(7),
   /** Postings scored below this stay out of the queue. */

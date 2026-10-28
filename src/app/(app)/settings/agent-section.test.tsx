@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -18,6 +18,7 @@ const initial: AgentSettings = {
   maxScores: 15,
   maxDrafts: 3,
   autoDraft: false,
+  moreQueries: [],
 };
 const countries = [
   { code: "de", name: "Germany" },
@@ -29,6 +30,29 @@ const open = (props: Partial<Parameters<typeof AgentSection>[0]> = {}) =>
 beforeEach(() => vi.clearAllMocks());
 
 describe("Settings → Job agent (E16-7)", () => {
+  it("adds more searches from the main one, saves them once typing pauses, and removes them (the multi-search agent)", async () => {
+    const user = userEvent.setup();
+    open();
+    expect(screen.getByText(/^One search a day/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "+ Add a search" }));
+    const added = screen.getByRole("group", { name: "Also search for" });
+    // Same place and country as the main search, its own words.
+    expect(within(added).getByLabelText("What")).toHaveValue("");
+    await user.type(within(added).getByLabelText("What"), "ML engineer");
+    await waitFor(() => expect(saveAgentSettings).toHaveBeenLastCalledWith({ moreQueries: [{ ...initial.query, keywords: "ML engineer" }] }), { timeout: 2000 });
+    expect(screen.getByText(/^2 searches, one request each from your job source's plan, a day/)).toBeInTheDocument();
+
+    await user.click(within(added).getByRole("button", { name: "Remove search 2" }));
+    expect(saveAgentSettings).toHaveBeenLastCalledWith({ moreQueries: [] });
+    expect(screen.queryByRole("group", { name: "Also search for" })).not.toBeInTheDocument();
+  });
+
+  it("allows up to five searches in all", () => {
+    open({ initial: { ...initial, moreQueries: Array.from({ length: 4 }, (_, index) => ({ ...initial.query, keywords: `Search ${index}` })) } });
+    expect(screen.getAllByRole("group", { name: "Also search for" })).toHaveLength(4);
+    expect(screen.queryByRole("button", { name: "+ Add a search" })).not.toBeInTheDocument();
+  });
+
   it("is off until it's turned on, and turns on with the search, saved with it", async () => {
     const user = userEvent.setup();
     open();
@@ -78,7 +102,7 @@ describe("Settings → Job agent (E16-7)", () => {
 
   it("explains the limits in plain words", () => {
     open();
-    expect(screen.getByText(/^One search a day, and at most three in any 24 hours\. Each run scores up to 15 postings\./)).toBeInTheDocument();
+    expect(screen.getByText(/^One search a day, and at most three runs in any 24 hours\. Each run scores up to 15 postings\./)).toBeInTheDocument();
   });
 
   it("points to the source or AI provider while one isn't set up", () => {

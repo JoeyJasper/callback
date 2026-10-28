@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { useTrackSave } from "@/components/save-tracker";
 import { toastResult } from "@/components/toast";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { Toggle } from "@/components/ui/toggle";
@@ -24,7 +25,12 @@ export type AgentSettings = {
   maxScores: number;
   maxDrafts: number;
   autoDraft: boolean;
+  /** More searches each run (the multi-search agent), up to MAX_MORE_QUERIES. */
+  moreQueries: SearchQuery[];
 };
+
+/** Searches beyond the first: each costs one request from the job source's plan per run. */
+export const MAX_MORE_QUERIES = 4;
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 const MIN_SCORES = [50, 55, 60, 65, 70, 75, 80, 85, 90];
@@ -69,6 +75,14 @@ export function AgentSection({
     setErrors({});
     setSettings((current) => ({ ...current, query: { ...current.query, ...patch } }));
   };
+  const { flush: flushMore } = useAutosave(settings.moreQueries, (moreQueries) => track(saveAgentSettings({ moreQueries })));
+  const setMore = (index: number, patch: Partial<SearchQuery>) =>
+    setSettings((current) => ({ ...current, moreQueries: current.moreQueries.map((query, at) => (at === index ? { ...query, ...patch } : query)) }));
+  // A new search starts where the main one is: same country, place and filters, other words.
+  const addSearch = () =>
+    setSettings((current) => ({ ...current, moreQueries: [...current.moreQueries, { ...current.query, keywords: "" }] }));
+  const removeSearch = (index: number) => change({ moreQueries: settings.moreQueries.filter((_, at) => at !== index) });
+  const searches = 1 + settings.moreQueries.length;
 
   const turnOn = (on: boolean) => {
     if (on) {
@@ -87,7 +101,7 @@ export function AgentSection({
   return (
     <>
       <SettingsSectionIntro title="Job agent">
-        Once a day it runs one search, scores the new postings against your profile, and keeps the best on the Agent screen. It never sends or applies.
+        Once a day it runs your searches, scores the new postings against your profile, and keeps the best on the Agent screen. It never sends or applies.
       </SettingsSectionIntro>
 
       {source === "ARBEITSAGENTUR" ? (
@@ -139,6 +153,32 @@ export function AgentSection({
             <RemoteOnlyField value={settings.query} onChange={setQuery} source={source} />
           </div>
         </div>
+        {settings.moreQueries.map((query, index) => (
+          <div key={index} role="group" aria-labelledby={`agent-search-${index}`} className="flex flex-col gap-4 border-t border-line pt-4">
+            <div className="flex items-center justify-between gap-3">
+              <h4 id={`agent-search-${index}`} className="text-field font-medium">
+                Also search for
+              </h4>
+              <Button variant="text" size="sm" aria-label={`Remove search ${index + 2}`} onClick={() => removeSearch(index)}>
+                Remove
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 items-start gap-x-4 gap-y-4 sm:grid-cols-2" onBlur={flushMore}>
+              <SearchFields value={query} onChange={(patch) => setMore(index, patch)} source={source} countries={countries} />
+              <div className="sm:col-span-2">
+                <RemoteOnlyField value={query} onChange={(patch) => setMore(index, patch)} source={source} />
+              </div>
+            </div>
+          </div>
+        ))}
+        {settings.moreQueries.length < MAX_MORE_QUERIES && (
+          <div className="flex flex-wrap items-center gap-3 border-t border-line pt-4">
+            <Button variant="secondary" size="sm" onClick={addSearch}>
+              + Add a search
+            </Button>
+            <p className="text-meta text-muted">Other job titles, places or countries, in the same run. The same job found twice counts once.</p>
+          </div>
+        )}
       </Card>
 
       <Card padding="none" className="grid gap-x-[18px] gap-y-5 px-7 py-[26px] sm:grid-cols-2">
@@ -195,7 +235,7 @@ export function AgentSection({
       </Card>
 
       <p className="text-meta text-muted">
-        One search a day, and at most three in any 24 hours. Each run scores up to {plural(settings.maxScores, "posting", "postings")}
+        {searches === 1 ? "One search" : `${searches} searches, one request each from your job source's plan,`} a day, and at most three runs in any 24 hours. Each run scores up to {plural(settings.maxScores, "posting", "postings")}
         {settings.autoDraft ? ` and prepares up to ${plural(settings.maxDrafts, "draft", "drafts")}` : ""}. Scoring and drafts go to your AI provider with your profile, as a new application does; the job source only gets the search.
       </p>
     </>

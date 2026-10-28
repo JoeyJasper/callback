@@ -38,13 +38,20 @@ const fake = vi.hoisted(() => ({
   ai: true,
   failOn: null as string | null,
   onScore: (() => {}) as (title: string) => void,
+  /** Pages by the search's keywords, for runs with more than one search; a string is that search failing. */
+  byKeywords: {} as Record<string, FoundPosting[] | string>,
 }));
-vi.mock("@/lib/job-search", () => ({
-  searchPostings: vi.fn(async () => {
-    fake.searches += 1;
-    return { postings: fake.postings, next: "page-2" };
-  }),
-}));
+vi.mock("@/lib/job-search", async () => {
+  const { JobSearchError } = await import("@/lib/job-search/errors");
+  return {
+    searchPostings: vi.fn(async (_source: string, _credentials: unknown, asked: SearchQuery) => {
+      fake.searches += 1;
+      const answer = fake.byKeywords[asked.keywords];
+      if (typeof answer === "string") throw new JobSearchError("unavailable", answer);
+      return { postings: answer ?? fake.postings, next: "page-2" };
+    }),
+  };
+});
 vi.mock("@/lib/job-search/config", () => ({
   loadJobSearchConfig: async () => ({
     source: fake.source,
@@ -103,12 +110,47 @@ const context = (abort?: AbortController): JobContext & { steps: string[] } => {
 
 beforeEach(async () => {
   await resetDatabase(prisma());
-  Object.assign(fake, { postings: page, searches: 0, source: "JSEARCH", ai: true, failOn: null, onScore: () => {} });
+  Object.assign(fake, { postings: page, searches: 0, source: "JSEARCH", ai: true, failOn: null, onScore: () => {}, byKeywords: {} });
   await saveSettings({ agentEnabled: true, agentQuery: query });
 });
 afterAll(() => prisma().$disconnect());
 
 describe("runAgentScan (E16-3)", () => {
+  it("runs every complete search, counts a job found twice once, and shares the scoring fairly (the multi-search agent)", async () => {
+    const broad = Array.from({ length: 6 }, (_, index) => posting(`d${index}`, `Product Designer ${index}`, `2026-10-1${index}T00:00:00Z`));
+    fake.byKeywords = {
+      "Product designer": broad,
+      // The same job as d5, under its own id in this search: once is enough.
+      "UX researcher": [posting("r1", "UX Researcher", "2026-10-15T00:00:00Z"), posting("dup", "Product Designer 5", "2026-10-15T00:00:00Z", { url: "https://jobs.example/d5" })],
+      "Service designer": "JSearch isn't answering right now.",
+    };
+    await saveSettings({
+      agentMaxScores: 4,
+      agentMoreQueries: [
+        { ...query, keywords: "UX researcher" },
+        // Incomplete (no words) or the same as another: skipped.
+        { ...query, keywords: "" },
+        { ...query, keywords: " product DESIGNER " },
+        { ...query, keywords: "Service designer" },
+      ],
+    });
+    const run = context();
+    const result = await runAgentScan({ manual: false }, run, now);
+    expect(fake.searches).toBe(3);
+    expect(run.steps[0]).toBe("Running 3 searches");
+    expect(result).toMatchObject({ found: 8, fresh: 7, scored: 4 });
+    // The newest of each search in turn: the researcher posting gets its look, not just the broad search's.
+    const scored = await prisma().agentCandidate.findMany({ select: { externalId: true } });
+    expect(scored.map((candidate) => candidate.externalId).toSorted()).toEqual(["d3", "d4", "d5", "r1"]);
+  });
+
+  it("stops with the source's words when every search fails", async () => {
+    fake.byKeywords = { "Product designer": "JSearch isn't answering right now.", "UX researcher": "JSearch isn't answering right now." };
+    await saveSettings({ agentMoreQueries: [{ ...query, keywords: "UX researcher" }] });
+    const result = await runAgentScan({ manual: false }, context(), now);
+    expect(result).toMatchObject({ found: 0, scored: 0, message: "JSearch isn't answering right now." });
+  });
+
   it("searches once, scores the new postings and keeps them, below the minimum too", async () => {
     const run = context();
     const result = await runAgentScan({ manual: false }, run, now);

@@ -106,7 +106,9 @@ export function AgentScreen({ view }: { view: AgentView }) {
 
         <Card padding="none" className="px-7 py-2">
           <dl>
-            <Fact label="Searches for">{view.search ?? "Nothing yet"}</Fact>
+            <Fact label="Searches for">
+              <span className="whitespace-pre-line">{view.search ?? "Nothing yet"}</span>
+            </Fact>
             <Fact label="Last run">
               {view.lastRun ? (
                 <>

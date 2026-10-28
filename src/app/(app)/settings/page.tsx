@@ -63,6 +63,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
             maxScores: settings.agentMaxScores,
             maxDrafts: settings.agentMaxDrafts,
             autoDraft: settings.agentAutoDraft,
+            moreQueries: settings.agentMoreQueries,
           }}
           source={(await loadJobSearchConfig()).source}
           aiReady={await isAiConfigured()}

@@ -91,6 +91,39 @@ export async function newPostings(postings: readonly FoundPosting[]): Promise<Fo
 
 const newestFirst = (a: FoundPosting, b: FoundPosting) => (b.postedAt ? Date.parse(b.postedAt) : 0) - (a.postedAt ? Date.parse(a.postedAt) : 0);
 
+/** The searches a run makes: the main one, then the others that are complete enough to run, without repeats. */
+export function agentQueries(settings: { agentQuery: SearchQuery; agentMoreQueries: SearchQuery[] }): SearchQuery[] {
+  const seen = new Set<string>();
+  return [settings.agentQuery, ...settings.agentMoreQueries].filter((query, index) => {
+    if (index > 0 && !agentQueryReady(query)) return false;
+    const key = JSON.stringify({ ...query, keywords: query.keywords.trim().toLowerCase(), place: query.place.trim().toLowerCase() });
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
+ * Which new postings get scored, up to `limit`: the newest of each search in
+ * turn, so a broad search can't use up the run before a narrow one gets a look.
+ */
+export function fairShare(pages: FoundPosting[][], fresh: FoundPosting[], limit: number): FoundPosting[] {
+  const freshKeys = new Set(fresh.map(postingKey));
+  const taken = new Set<string>();
+  const queues = pages.map((page) => page.filter((posting) => freshKeys.has(postingKey(posting))).toSorted(newestFirst));
+  const picked: FoundPosting[] = [];
+  while (picked.length < limit && queues.some((queue) => queue.length > 0)) {
+    for (const queue of queues) {
+      while (queue.length > 0 && taken.has(postingKey(queue[0]))) queue.shift();
+      const next = queue.shift();
+      if (!next || picked.length >= limit) continue;
+      taken.add(postingKey(next));
+      picked.push(next);
+    }
+  }
+  return picked;
+}
+
 /**
  * One run: the first page of results only (one source request), then a
  * score for the newest new postings, up to agentMaxScores. Each is kept as a
@@ -113,23 +146,35 @@ export async function runAgentScan({ manual }: { manual: boolean }, context: Job
     return result;
   };
 
-  await context.step("Searching for new postings");
+  const queries = agentQueries(settings);
+  await context.step(queries.length === 1 ? "Searching for new postings" : `Running ${queries.length} searches`);
   const config = await loadJobSearchConfig();
   const source = config.source!;
-  let postings: FoundPosting[];
-  try {
-    // The first page only: the agent never asks for a second.
-    postings = (await searchPostings(source, credentialsFor(config, source), settings.agentQuery, null, requestContext(source))).postings;
-  } catch (error) {
-    if (error instanceof JobSearchError) return finish(stopped(error.message));
-    throw error;
+  // Each search asks for its first page only: the agent never asks for a second.
+  // One search that fails doesn't stop the others; when all fail, the run says why.
+  const pages: FoundPosting[][] = [];
+  let searchProblem: string | null = null;
+  for (const query of queries) {
+    try {
+      pages.push((await searchPostings(source, credentialsFor(config, source), query, null, requestContext(source))).postings);
+    } catch (error) {
+      if (!(error instanceof JobSearchError)) throw error;
+      searchProblem = error.message;
+      pages.push([]);
+    }
   }
+  if (searchProblem && pages.every((page) => page.length === 0)) return finish(stopped(searchProblem));
+  const postings = pages.flat();
 
+  // New to the agent, and once each across the searches: the same job found twice counts once.
   const fresh = await newPostings(postings);
   const counts = { found: postings.length, fresh: fresh.length, skipped: postings.length - fresh.length, drafted: 0 };
-  if (fresh.length === 0) return finish({ ...counts, scored: 0, message: postings.length === 0 ? "The search found no postings this time." : "No new postings this time." });
+  if (fresh.length === 0) {
+    const none = queries.length === 1 ? "The search found no postings this time." : "The searches found no postings this time.";
+    return finish({ ...counts, scored: 0, message: postings.length === 0 ? none : "No new postings this time." });
+  }
 
-  const toScore = fresh.toSorted(newestFirst).slice(0, settings.agentMaxScores);
+  const toScore = fairShare(pages, fresh, settings.agentMaxScores);
   await context.step(`Scoring ${toScore.length} ${toScore.length === 1 ? "posting" : "postings"}`);
   const [provider, options, profile] = await Promise.all([getAiProvider(), loadTaskOptions(), loadProfile()]);
   let scored = 0;

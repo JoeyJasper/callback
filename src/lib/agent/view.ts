@@ -14,7 +14,7 @@ import { lastKnownTimeZone } from "@/lib/time-zone";
 
 import { stringsOf } from "./candidates";
 import { AGENT_JOB_KEY } from "./jobs";
-import { agentSetupProblem } from "./run";
+import { agentQueries, agentSetupProblem } from "./run";
 import { AGENT_MAX_RUNS_PER_DAY, runsInPastDay } from "./runs";
 import { nextAgentRun } from "./schedule";
 
@@ -112,9 +112,11 @@ export async function loadAgentView(now = new Date()): Promise<AgentView> {
 
   const query = settings.agentQuery;
   const source: JobSource | null = config.source;
-  const search = query.keywords.trim()
-    ? `${describeSearch(query, countryName(query.country) || query.country.toUpperCase())}${source ? ` · via ${SOURCE_INFO[source].name}` : ""}`
-    : null;
+  // Every search a run makes, one per line.
+  const described = query.keywords.trim()
+    ? agentQueries(settings).map((entry) => describeSearch(entry, countryName(entry.country) || entry.country.toUpperCase()))
+    : [];
+  const search = described.length > 0 ? `${described.join("\n")}${source ? ` · via ${SOURCE_INFO[source].name}` : ""}` : null;
   const setupProblem = await agentSetupProblem(query);
 
   const view = (candidate: (typeof candidates)[number]): AgentCandidateView => {

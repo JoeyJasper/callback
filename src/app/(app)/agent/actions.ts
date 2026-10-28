@@ -25,6 +25,8 @@ export const saveAgentSettings = action(
   z.object({
     enabled: z.boolean().optional(),
     query: searchQuerySchema.optional(),
+    /** The extra searches each run makes; incomplete ones are kept while being typed, and skipped by runs. */
+    moreQueries: z.array(searchQuerySchema).max(4).optional(),
     hour: z.number().int().min(0).max(23).optional(),
     minScore: z.number().int().min(0).max(100).optional(),
     maxScores: z.number().int().min(1).max(30).optional(),
@@ -41,6 +43,7 @@ export const saveAgentSettings = action(
     await saveSettings({
       agentEnabled: changes.enabled,
       agentQuery: changes.query,
+      agentMoreQueries: changes.moreQueries,
       agentHour: changes.hour,
       agentMinScore: changes.minScore,
       agentMaxScores: changes.maxScores,
